@@ -43,8 +43,7 @@ frontend/web/
     │   ├── app-search.js   # 搜索入口
     │   ├── app-user.js     # 用户入口
     │   ├── auth-modal.js   # 登录弹窗
-    │   ├── poster-grid.js  # 海报网格
-    │   └── gy-player/      # GY Player 打包产物（不要手改）
+    │   └── poster-grid.js  # 海报网格
     ├── pages/              # 页面（路由对应的渲染函数）
     │   ├── home.js         # 首页：三分区 catalog
     │   ├── catalog.js      # 分类页：完整列表
@@ -62,8 +61,8 @@ frontend/web/
         └── vip.js          # VIP/订单状态
 ```
 
-播放器源码在工作区 `packages/gy-player/src/` 维护。`frontend/web/src/components/gy-player/gy-player.js`
-是构建同步后的网页产物，不作为源码入口。
+播放器源码在独立仓库 `800-player` 维护。主站播放页运行时加载同域线上产物：
+`/player/gy-player.js`。以后改播放器只改 `800-player`，`800-web` 不再保存播放器拷贝。
 
 ---
 

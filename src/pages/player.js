@@ -3,9 +3,20 @@
 
 import { getMeta, getStream } from '../services/api.js';
 import { addHistory } from '../services/library.js';
-import '../components/gy-player/gy-player.js';
+
+const PLAYER_MODULE_URL = '/player/gy-player.js';
+let playerModulePromise = null;
+
+function loadPlayerModule() {
+    if (!playerModulePromise) {
+        playerModulePromise = import(PLAYER_MODULE_URL);
+    }
+    return playerModulePromise;
+}
 
 export async function render(container, params) {
+    await loadPlayerModule();
+
     const { type, id, videoId } = params;
 
     const streamId = videoId || id;
