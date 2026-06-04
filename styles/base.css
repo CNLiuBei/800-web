@@ -1,0 +1,135 @@
+/* 基础：变量、重置、全局排版 */
+
+:root {
+    /* 默认亮色主题 */
+    --bg: #ffffff;
+    --bg-secondary: #f5f5f7;
+    --fg: rgba(0, 0, 0, 0.88);
+    --fg-muted: rgba(0, 0, 0, 0.45);
+    --accent: #0071e3;
+    --green: #30d158;
+    --overlay: rgba(0, 0, 0, 0.04);
+    --border: rgba(0, 0, 0, 0.06);
+    --card-bg: rgba(255, 255, 255, 0.72);
+    --radius: 0.75rem;
+    --nav-height: 3.5rem;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+    /* 叠在图片/背景上的浅色文字：双层阴影（细勾边 + 大扩散），保证任意明暗背景都清晰可读 */
+    --text-on-image: 0 1px 2px rgba(0,0,0,0.9), 0 2px 12px rgba(0,0,0,0.65), 0 0 1px rgba(0,0,0,0.8);
+
+    /* 详情页全屏遮罩：亮色用浅雾，文字用深色前景；高透明保留背景图可见 */
+    --detail-scrim: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] {
+    --bg: #000000;
+    --bg-secondary: #0a0a0a;
+    --fg: rgba(255, 255, 255, 0.92);
+    --fg-muted: rgba(255, 255, 255, 0.5);
+    --accent: #0a84ff;
+    --overlay: rgba(255, 255, 255, 0.06);
+    --border: rgba(255, 255, 255, 0.08);
+    --card-bg: rgba(28, 28, 30, 0.85);
+    /* 暗色主题：详情页遮罩用深色，文字为浅色前景 */
+    --detail-scrim: rgba(0, 0, 0, 0.58);
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+    width: 100%; height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* 移动端：用动态视口高度，避免 iOS Safari 工具栏伸缩时底部栏被遮挡 */
+@media (max-width: 640px) {
+    html, body { height: 100dvh; }
+}
+
+/* 主题切换：背景与文字色平滑过渡（尊重 reduced-motion）*/
+@media (prefers-reduced-motion: no-preference) {
+    html { transition: background-color 300ms ease; }
+    body { transition: background-color 300ms ease, color 300ms ease; }
+}
+
+/* 全局尊重「减少动态效果」偏好：关闭非必要动画与过渡 */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+.hidden { display: none !important; }
+
+html.theme-reveal-transition::view-transition-old(root),
+html.theme-reveal-transition::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
+html.theme-reveal-transition::view-transition-old(root) { z-index: 0; }
+html.theme-reveal-transition::view-transition-new(root) { z-index: 1; }
+
+.theme-ripple-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483647;
+    pointer-events: none;
+    will-change: clip-path, opacity;
+}
+
+/* 移动端全局保障：禁止横向溢出、惯性滚动、关闭文本选中与点击高亮 */
+@media (max-width: 640px) {
+    html, body { overflow-x: hidden; }
+    #app { overscroll-behavior-y: contain; }
+    .poster-row, .episodes-list, .episodes-segments, .search-results,
+    .season-dropdown, .user-menu { -webkit-overflow-scrolling: touch; }
+    .bottom-tab, .nav-btn, .poster-item, .hero-play, .play-btn, .icon-btn {
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+    }
+    .bottom-tab span, .section-title, .poster-title { user-select: none; -webkit-user-select: none; }
+}
+
+/* PWA standalone（添加到主屏后从主屏打开）：更接近原生 App 的交互 */
+@media (display-mode: standalone) {
+    /* 默认禁止长按选中/系统菜单，营造原生感；输入与正文内容例外（下方放开）*/
+    body { -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
+    input, textarea, .comment-text, .detail-desc, .info-row dd {
+        user-select: text; -webkit-user-select: text; -webkit-touch-callout: default;
+    }
+}
+/* iOS 旧版用 navigator.standalone，对应 body.standalone（由 JS 兜底打标记）*/
+body.pwa-standalone {
+    -webkit-touch-callout: none; user-select: none; -webkit-user-select: none;
+}
+body.pwa-standalone input, body.pwa-standalone textarea,
+body.pwa-standalone .comment-text, body.pwa-standalone .detail-desc, body.pwa-standalone .info-row dd {
+    user-select: text; -webkit-user-select: text; -webkit-touch-callout: default;
+}
+
+
+/* 工具类：叠在图片/背景上的文字统一用强化双层阴影（任意明暗背景都清晰）*/
+.on-image, .on-image * { text-shadow: var(--text-on-image); }
+/* 图上文字里的按钮/输入等控件不需要阴影（它们有自己的背景）*/
+.on-image .icon-btn, .on-image .icon-btn *,
+.on-image .play-btn, .on-image .play-btn *,
+.on-image button, .on-image input { text-shadow: none; }
+
+/* 移动端：所有文本输入字号 ≥16px，避免 iOS Safari 聚焦时自动放大页面 */
+@media (max-width: 640px) {
+    input[type="text"], input[type="search"], input[type="email"],
+    input[type="password"], input:not([type]), textarea, select {
+        font-size: 16px !important;
+    }
+}

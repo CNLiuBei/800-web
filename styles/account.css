@@ -1,0 +1,718 @@
+/* 用户中心 */
+
+.account-page {
+    width: min(100% - 3rem, 72rem);
+    margin: 0 auto;
+    padding: 1.75rem 0 3.5rem;
+}
+
+.account-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.account-h1 {
+    font-size: 1.65rem;
+    line-height: 1.15;
+    font-weight: 700;
+}
+
+.account-subtitle,
+.account-card-desc {
+    color: var(--fg-muted);
+    font-size: 0.88rem;
+    line-height: 1.55;
+}
+
+.account-subtitle { margin-top: 0.35rem; }
+
+.account-layout {
+    display: grid;
+    grid-template-columns: minmax(17rem, 20rem) minmax(0, 1fr);
+    align-items: start;
+    gap: 1rem;
+}
+
+.account-sidebar {
+    position: sticky;
+    top: calc(var(--nav-height) + var(--safe-top) + 2rem);
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.account-main {
+    display: grid;
+    gap: 1rem;
+}
+
+.account-card {
+    position: relative;
+    background: var(--card-bg);
+    border: 0.5px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 1.25rem;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.account-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.account-card-title {
+    font-size: 1rem;
+    line-height: 1.3;
+    font-weight: 650;
+    margin-bottom: 0.25rem;
+}
+
+/* 账号概览 */
+.account-overview {
+    overflow: hidden;
+    display: grid;
+    gap: 1rem;
+    padding: 1.35rem;
+}
+
+.account-overview::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 0.28rem;
+    background: linear-gradient(90deg, var(--accent), #32c48d, #f2b84b);
+}
+
+.account-profile-kicker {
+    color: var(--fg-muted);
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+}
+
+.account-avatar {
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #2f7d64);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    font-weight: 700;
+    overflow: hidden;
+}
+
+.account-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.account-overview-info {
+    min-width: 0;
+}
+
+.account-name {
+    font-size: 1.2rem;
+    line-height: 1.25;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.account-email {
+    margin-top: 0.25rem;
+    color: var(--fg-muted);
+    font-size: 0.86rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.account-badge {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    min-height: 1.65rem;
+    margin-top: 0.85rem;
+    padding: 0.25rem 0.7rem;
+    border-radius: 999px;
+    background: var(--overlay);
+    color: var(--fg-muted);
+    font-size: 0.75rem;
+    font-weight: 650;
+    line-height: 1.2;
+}
+
+.account-badge.vip {
+    background: linear-gradient(135deg, #ffd24a, #f28b2e);
+    color: #17120a;
+}
+
+.account-created {
+    min-height: 1.1em;
+    margin-top: 0.5rem;
+    color: var(--fg-muted);
+    font-size: 0.75rem;
+}
+
+.account-created.is-placeholder { opacity: 0; }
+
+.account-upgrade {
+    flex: 0 0 auto;
+    min-height: 2.35rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 1rem;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #ffd24a, #f28b2e);
+    color: #17120a;
+    font-size: 0.88rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: transform 150ms, opacity 150ms;
+}
+
+.account-upgrade:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+/* 表单 */
+.account-form {
+    max-width: 31rem;
+    display: grid;
+    gap: 0.9rem;
+}
+
+.account-password-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: 42rem;
+}
+
+.account-password-form .account-field:first-child,
+.account-password-form .account-msg,
+.account-password-form .account-btn {
+    grid-column: 1 / -1;
+}
+
+.account-field {
+    display: grid;
+    gap: 0.4rem;
+}
+
+.account-label {
+    color: var(--fg-muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.account-input {
+    width: 100%;
+    height: 2.75rem;
+    padding: 0 0.85rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border);
+    background: var(--overlay);
+    color: var(--fg);
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 180ms, background 180ms, box-shadow 180ms;
+}
+
+.account-input:focus {
+    border-color: var(--accent);
+    background: var(--card-bg);
+    box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.14);
+}
+
+.account-btn {
+    justify-self: start;
+    min-height: 2.6rem;
+    padding: 0 1.2rem;
+    border: none;
+    border-radius: 0.5rem;
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 650;
+    cursor: pointer;
+    transition: opacity 150ms, transform 150ms;
+}
+
+.account-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.account-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.account-msg {
+    padding: 0.65rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.85rem;
+    line-height: 1.45;
+}
+
+.account-msg.ok {
+    background: rgba(48, 209, 88, 0.12);
+    color: #30d158;
+}
+
+.account-msg.err {
+    background: rgba(255, 69, 58, 0.1);
+    color: #ff453a;
+}
+
+/* 快捷入口 */
+.account-links {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.account-link {
+    min-height: 5.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.85rem;
+    border: 0.5px solid var(--border);
+    border-radius: 0.5rem;
+    background: var(--overlay);
+    color: var(--fg);
+    text-decoration: none;
+    transition: border-color 150ms, background 150ms, transform 150ms;
+}
+
+.account-link:hover {
+    border-color: rgba(0, 113, 227, 0.35);
+    background: rgba(0, 113, 227, 0.08);
+    transform: translateY(-1px);
+}
+
+.account-link-icon {
+    width: 2.35rem;
+    height: 2.35rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    border-radius: 0.5rem;
+    background: var(--card-bg);
+    color: var(--accent);
+}
+
+.account-link-icon svg {
+    width: 1.15rem;
+    height: 1.15rem;
+}
+
+.account-link-copy {
+    min-width: 0;
+    display: grid;
+    gap: 0.18rem;
+}
+
+.account-link-title {
+    font-size: 0.92rem;
+    font-weight: 700;
+}
+
+.account-link-desc {
+    color: var(--fg-muted);
+    font-size: 0.76rem;
+    line-height: 1.35;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.account-link-arrow {
+    width: 1.25rem;
+    height: 1.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    margin-left: auto;
+    color: var(--fg-muted);
+    opacity: 0.75;
+}
+
+.account-link-arrow svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+.account-signout {
+    width: 100%;
+    min-height: 2.75rem;
+    border: 0.5px solid rgba(255, 69, 58, 0.35);
+    border-radius: 0.5rem;
+    background: transparent;
+    color: #ff453a;
+    font-size: 0.92rem;
+    font-weight: 650;
+    cursor: pointer;
+    transition: background 150ms;
+}
+
+.account-signout:hover {
+    background: rgba(255, 69, 58, 0.08);
+}
+
+/* 消费记录 */
+.account-orders {
+    display: grid;
+    gap: 0.55rem;
+}
+
+.account-orders-loading,
+.account-orders-empty {
+    padding: 1rem 0;
+    color: var(--fg-muted);
+    text-align: center;
+    font-size: 0.86rem;
+}
+
+.account-order {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1rem;
+    min-height: 4rem;
+    padding: 0.75rem 0.85rem;
+    border: 0.5px solid var(--border);
+    border-radius: 0.5rem;
+    background: var(--overlay);
+}
+
+.account-order-main {
+    min-width: 0;
+}
+
+.account-order-name {
+    display: block;
+    font-size: 0.92rem;
+    font-weight: 650;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.account-order-meta {
+    display: block;
+    margin-top: 0.25rem;
+    color: var(--fg-muted);
+    font-size: 0.76rem;
+}
+
+.account-order-right {
+    text-align: right;
+}
+
+.account-order-amount {
+    display: block;
+    font-size: 0.98rem;
+    font-weight: 750;
+}
+
+.account-order-status {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.35rem;
+    margin-top: 0.25rem;
+    padding: 0 0.5rem;
+    border-radius: 999px;
+    background: var(--overlay);
+    color: var(--fg-muted);
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.account-order-status.ok {
+    background: rgba(48, 209, 88, 0.15);
+    color: #30d158;
+}
+
+.account-order-status.pending {
+    background: rgba(255, 159, 10, 0.15);
+    color: #ff9f0a;
+}
+
+.account-order-status.expired {
+    background: var(--overlay);
+    color: var(--fg-muted);
+}
+
+/* 添加到主屏入口卡片 */
+.account-install {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.account-install-info {
+    min-width: 0;
+}
+
+.account-install .account-card-title {
+    margin-bottom: 0.25rem;
+}
+
+.account-install .account-btn {
+    flex: 0 0 auto;
+}
+
+/* 危险区 */
+.account-danger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-color: rgba(255, 69, 58, 0.28);
+}
+
+.account-danger-tip {
+    max-width: 34rem;
+    color: var(--fg-muted);
+    font-size: 0.85rem;
+    line-height: 1.6;
+}
+
+.account-danger-btn {
+    flex: 0 0 auto;
+    min-height: 2.55rem;
+    padding: 0 1rem;
+    border: 1px solid rgba(255, 69, 58, 0.42);
+    border-radius: 0.5rem;
+    background: transparent;
+    color: #ff453a;
+    font-size: 0.9rem;
+    font-weight: 650;
+    cursor: pointer;
+    transition: background 150ms;
+}
+
+.account-danger-btn:hover {
+    background: rgba(255, 69, 58, 0.1);
+}
+
+/* 登录设备 / 会话列表 */
+.account-sessions {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.session-item {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.85rem;
+    border-radius: 0.5rem;
+    border: 0.5px solid var(--border);
+    background: var(--overlay);
+}
+
+.session-icon {
+    flex: 0 0 auto;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+    background: var(--card-bg);
+    color: var(--fg);
+    opacity: 0.8;
+}
+
+.session-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.session-dev {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 650;
+}
+
+.session-current {
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    background: rgba(48, 209, 88, 0.15);
+    color: #30d158;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.session-meta {
+    margin-top: 0.2rem;
+    color: var(--fg-muted);
+    font-size: 0.75rem;
+}
+
+.session-revoke {
+    flex: 0 0 auto;
+    min-height: 2.25rem;
+    padding: 0 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    background: transparent;
+    color: var(--fg-muted);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 150ms, color 150ms;
+}
+
+.session-revoke:hover {
+    background: rgba(255, 69, 58, 0.1);
+    color: #ff453a;
+}
+
+.session-revoke:disabled {
+    opacity: 0.5;
+}
+
+@media (max-width: 900px) {
+    .account-page {
+        width: min(100% - 2rem, 42rem);
+    }
+
+    .account-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .account-sidebar {
+        position: static;
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .account-overview {
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: center;
+    }
+
+    .account-links { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 640px) {
+    .account-page {
+        width: 100%;
+        padding: 1rem 1rem 2rem;
+    }
+
+    .account-header {
+        align-items: stretch;
+        flex-direction: column;
+        margin-bottom: 1rem;
+    }
+
+    .account-h1 {
+        font-size: 1.4rem;
+    }
+
+    .account-subtitle,
+    .account-card-desc {
+        font-size: 0.84rem;
+    }
+
+    .account-upgrade {
+        width: 100%;
+        min-height: 2.75rem;
+    }
+
+    .account-card {
+        padding: 1rem;
+    }
+
+    .account-overview {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .account-avatar {
+        width: 3.65rem;
+        height: 3.65rem;
+        font-size: 1.45rem;
+    }
+
+    .account-name {
+        font-size: 1.08rem;
+    }
+
+    .account-links {
+        grid-template-columns: 1fr;
+    }
+
+    .account-link,
+    .account-signout,
+    .account-input,
+    .account-btn,
+    .account-danger-btn {
+        min-height: 3rem;
+    }
+
+    .account-link {
+        min-height: 4.75rem;
+    }
+
+    .account-btn,
+    .account-danger-btn {
+        width: 100%;
+        justify-self: stretch;
+    }
+
+    .account-password-form {
+        grid-template-columns: 1fr;
+    }
+
+    .account-install,
+    .account-danger {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .account-order {
+        grid-template-columns: 1fr;
+        gap: 0.55rem;
+    }
+
+    .account-order-right {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        text-align: left;
+    }
+
+    .session-item {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .session-revoke {
+        width: 100%;
+        min-height: 2.75rem;
+    }
+}

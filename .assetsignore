@@ -1,0 +1,7 @@
+.git/
+.github/
+.wrangler/
+wrangler.toml
+dev-server.mjs
+ARCHITECTURE.md
+ROADMAP.md

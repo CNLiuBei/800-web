@@ -1,0 +1,28 @@
+{
+    "id": "/",
+    "name": "800影视",
+    "short_name": "800影视",
+    "description": "免费在线观看电影、剧集、动漫",
+    "start_url": "/?source=pwa",
+    "scope": "/",
+    "display": "standalone",
+    "display_override": ["standalone", "minimal-ui"],
+    "background_color": "#000000",
+    "theme_color": "#000000",
+    "orientation": "any",
+    "icons": [
+        { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+        { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+        { "src": "/icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+        { "src": "/icons/icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    ],
+    "shortcuts": [
+        { "name": "电影", "short_name": "电影", "url": "/#/movie", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+        { "name": "剧集", "short_name": "剧集", "url": "/#/tv", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+        { "name": "动漫", "short_name": "动漫", "url": "/#/anime", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+        { "name": "我的收藏", "short_name": "收藏", "url": "/#/favorites", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+    ],
+    "categories": ["entertainment", "video"],
+    "lang": "zh-CN",
+    "dir": "ltr"
+}
