@@ -1,6 +1,6 @@
 // Service Worker - 缓存策略 + 版本管理 + 更新通知
 
-const VERSION = 'v35';
+const VERSION = 'v36';
 const STATIC_CACHE = `gy-static-${VERSION}`;
 const API_CACHE = 'gy-api';
 const IMG_CACHE = 'gy-img';
@@ -28,18 +28,19 @@ const STATIC_ASSETS = [
 ];
 
 // 安装：预缓存首屏资源（逐个 put，单个失败不影响整体）
-// 注意：不在此处 skipWaiting，新 SW 会停在 waiting 态，由前端提示用户后再接管，
-// 避免静默替换正在使用的资源导致页面状态不一致。
+// v36 修复 iOS Safari 导航重定向致命错误，安装后立即接管，避免旧 SW 持续拦截导致手机打不开。
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(STATIC_CACHE).then(async (cache) => {
             await Promise.all(STATIC_ASSETS.map(async (url) => {
                 try {
-                    const res = await fetch(url, { cache: 'reload' });
-                    if (res.ok) await cache.put(url, res);
+                    const res = await fetch(url, { cache: 'reload', redirect: 'follow' });
+                    if (res.ok && res.type !== 'opaqueredirect') {
+                        await cache.put(url, stripRedirectMetadata(res));
+                    }
                 } catch { /* 单个资源失败忽略，不阻断安装 */ }
             }));
-        })
+        }).then(() => self.skipWaiting())
     );
 });
 
@@ -127,12 +128,14 @@ self.addEventListener('fetch', (event) => {
 async function navigationHandler(request) {
     const cache = await caches.open(STATIC_CACHE);
     try {
-        const response = await fetch(request);
-        if (response.ok) cache.put('/index.html', response.clone());
-        return response;
+        const response = await fetch(request, { redirect: 'follow' });
+        if (response.type === 'opaqueredirect') throw new Error('Navigation redirected');
+        const safeResponse = stripRedirectMetadata(response);
+        if (safeResponse.ok) cache.put('/index.html', safeResponse.clone());
+        return safeResponse;
     } catch {
-        return (await cache.match('/index.html')) ||
-            (await cache.match('/')) ||
+        return stripRedirectMetadata(await cache.match('/index.html')) ||
+            stripRedirectMetadata(await cache.match('/')) ||
             new Response('<h1>离线</h1><p>当前无网络，请连网后重试。</p>', {
                 status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' }
             });
@@ -142,16 +145,18 @@ async function navigationHandler(request) {
 // 策略：网络优先
 async function networkFirst(request, cacheName) {
     try {
-        const response = await fetch(request);
-        if (response.ok) {
+        const response = await fetch(request, { redirect: 'follow' });
+        if (response.type === 'opaqueredirect') throw new Error('Redirect response is not cacheable');
+        const safeResponse = stripRedirectMetadata(response);
+        if (safeResponse.ok) {
             const cache = await caches.open(cacheName);
-            cache.put(request, response.clone());
+            cache.put(request, safeResponse.clone());
             // API 缓存做容量上限控制，避免无限增长占满存储
             if (cacheName === API_CACHE) trimCache(cacheName, 150);
         }
-        return response;
+        return safeResponse;
     } catch {
-        const cached = await caches.match(request);
+        const cached = stripRedirectMetadata(await caches.match(request));
         // 离线兜底返回合法 JSON，避免前端 res.json() 解析崩溃
         return cached || new Response(
             JSON.stringify({ offline: true, message: '当前无网络' }),
@@ -176,13 +181,30 @@ async function trimCache(cacheName, maxItems) {
 // 策略：Stale While Revalidate（先返回缓存，后台更新）
 async function staleWhileRevalidate(request, cacheName) {
     const cache = await caches.open(cacheName);
-    const cached = await cache.match(request);
+    const cached = stripRedirectMetadata(await cache.match(request));
 
     // 后台更新
-    const fetchPromise = fetch(request).then(response => {
-        if (response.ok) cache.put(request, response.clone());
-        return response;
+    const fetchPromise = fetch(request, { redirect: 'follow' }).then(response => {
+        if (response.type === 'opaqueredirect') throw new Error('Redirect response is not cacheable');
+        const safeResponse = stripRedirectMetadata(response);
+        if (safeResponse.ok) cache.put(request, safeResponse.clone());
+        return safeResponse;
     }).catch(() => null);
 
-    return cached || fetchPromise;
+    if (cached) return cached;
+    return (await fetchPromise) || new Response('', { status: 504 });
+}
+
+// iOS Safari 不允许 Service Worker 返回带 redirected=true 的 Response。
+// 这里用同一 body/status/headers 重新构造响应，去掉重定向元数据。
+function stripRedirectMetadata(response) {
+    if (!response) return null;
+    if (!response?.redirected) return response;
+    const headers = new Headers(response.headers);
+    headers.delete('set-cookie');
+    return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers,
+    });
 }
