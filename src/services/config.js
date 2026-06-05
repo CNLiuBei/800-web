@@ -14,7 +14,7 @@
 // 是否为生产同域环境：部署域名为 guangying.org 或其子域
 function isSameOriginDeploy() {
     const host = location.hostname;
-    return host === 'guangying.org' || host.endsWith('.guangying.org');
+    return false;
 }
 
 // 跨域回退地址（本地开发用）

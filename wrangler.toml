@@ -6,9 +6,13 @@ directory = "."
 not_found_handling = "single-page-application"
 
 [[routes]]
-pattern = "guangying.org/*"
-zone_name = "guangying.org"
+pattern = "guangying.org"
+custom_domain = true
 
 [[routes]]
-pattern = "www.guangying.org/*"
-zone_name = "guangying.org"
+pattern = "www.guangying.org"
+custom_domain = true
+
+[[routes]]
+pattern = "m.guangying.org"
+custom_domain = true
