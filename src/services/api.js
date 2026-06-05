@@ -7,6 +7,7 @@ const cache = new Map();
 const CACHE_TTL = 5 * 60 * 1000; // 5 分钟
 const CACHE_MAX = 200; // 最多缓存 200 条
 const REQUEST_TIMEOUT = 15000; // 15 秒超时
+const RESPONSE_CACHE = 'gy-api-response-v1';
 
 async function request(path) {
     const url = `${BASE}${path}`;
@@ -35,16 +36,52 @@ async function request(path) {
         }
         const data = await res.json();
 
-        // 缓存淘汰（LRU 简化版：超过上限删最早的）
-        if (cache.size >= CACHE_MAX) {
-            const firstKey = cache.keys().next().value;
-            cache.delete(firstKey);
-        }
-        cache.set(url, { data, time: Date.now() });
+        putMemoryCache(url, data);
+        persistResponse(url, data);
         return data;
     } catch (err) {
         clearTimeout(timer);
+        if (cached?.data) return cached.data;
+        const stale = await readPersistedResponse(url);
+        if (stale) return stale;
         throw err;
+    }
+}
+
+function putMemoryCache(url, data) {
+    // 缓存淘汰（LRU 简化版：超过上限删最早的）
+    if (cache.size >= CACHE_MAX) {
+        const firstKey = cache.keys().next().value;
+        cache.delete(firstKey);
+    }
+    cache.set(url, { data, time: Date.now() });
+}
+
+async function persistResponse(url, data) {
+    if (!('caches' in window)) return;
+    try {
+        const store = await caches.open(RESPONSE_CACHE);
+        await store.put(url, new Response(JSON.stringify({
+            time: Date.now(),
+            data,
+        }), {
+            headers: { 'Content-Type': 'application/json' },
+        }));
+    } catch {}
+}
+
+async function readPersistedResponse(url) {
+    if (!('caches' in window)) return null;
+    try {
+        const store = await caches.open(RESPONSE_CACHE);
+        const res = await store.match(url);
+        if (!res) return null;
+        const payload = await res.json();
+        if (!payload?.data) return null;
+        putMemoryCache(url, payload.data);
+        return payload.data;
+    } catch {
+        return null;
     }
 }
 
@@ -122,3 +159,5 @@ export function preload(type, id) {
 export function clearCache() {
     cache.clear();
 }
+
+// TODO: 下一轮为 Cache API 增加版本迁移与容量裁剪策略。

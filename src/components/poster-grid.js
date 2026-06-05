@@ -37,6 +37,8 @@ class PosterGrid extends HTMLElement {
         const poster = esc(item.poster || '');
         // 优先用项自身的 type（收藏/历史是电影+剧集混合列表），回退到传入的统一 type
         const itemType = esc(item.type || type);
+        const typeLabel = itemType === 'movie' ? '电影' : '剧集';
+        const year = item.year ? esc(String(item.year)) : '';
         // 续播进度（继续观看场景）：progress/duration 有值时显示底部进度条
         let progressBar = '';
         if (item.progress > 0 && item.duration > 0) {
@@ -51,9 +53,11 @@ class PosterGrid extends HTMLElement {
             <a href="${href}" class="poster-item" data-id="${id}" data-type="${itemType}">
                 <div class="poster-img-wrap">
                     <img class="poster-img" src="${poster}" alt="${name}" loading="lazy" decoding="async">
+                    <div class="poster-badge">${typeLabel}</div>
                     ${progressBar}
                 </div>
                 <div class="poster-title">${name}</div>
+                ${year ? `<div class="poster-subtitle">${year}</div>` : ''}
             </a>
         `;
     }
@@ -96,3 +100,5 @@ class PosterGrid extends HTMLElement {
 
 customElements.define('poster-grid', PosterGrid);
 export default PosterGrid;
+
+// TODO: 下一轮接入 IntersectionObserver，只预取即将进入视口的海报详情。

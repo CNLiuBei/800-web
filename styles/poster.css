@@ -54,6 +54,27 @@ poster-grid, .poster-grid {
     height: 3px; background: rgba(0,0,0,0.45);
 }
 .poster-progress-bar { height: 100%; background: var(--accent); }
+.poster-badge {
+    position: absolute;
+    top: 0.45rem;
+    left: 0.45rem;
+    padding: 0.18rem 0.42rem;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    opacity: 0;
+    transform: translateY(-0.2rem);
+    transition: opacity 180ms ease, transform 180ms ease;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+.poster-item:hover .poster-badge,
+.poster-item:focus-visible .poster-badge {
+    opacity: 1;
+    transform: translateY(0);
+}
 
 .poster-title {
     margin-top: 0.6rem; font-size: 0.85rem; font-weight: 500;
@@ -62,6 +83,12 @@ poster-grid, .poster-grid {
     transition: opacity 200ms;
 }
 .poster-item:hover .poster-title { opacity: 1; }
+.poster-subtitle {
+    margin-top: 0.18rem;
+    padding: 0 0.1rem;
+    color: var(--fg-muted);
+    font-size: 0.72rem;
+}
 
 /* ===== 横向滑动行（首页）===== */
 poster-grid.poster-row {
@@ -98,6 +125,7 @@ poster-grid.poster-row .poster-item {
 /* 触屏不放大（避免错位），保留阴影反馈 */
 @media (hover: none) {
     .poster-item:hover .poster-img-wrap { transform: none; }
+    .poster-badge { display: none; }
 }
 
 /* 移动端：收紧左右留白，给内容更多宽度 */
@@ -113,3 +141,5 @@ poster-grid.poster-row .poster-item {
     .poster-img-wrap, .poster-img, .poster-title { transition: none; }
     .poster-item:hover .poster-img-wrap { transform: none; }
 }
+
+/* TODO: 下一轮为大屏电视焦点态增加方向键可见焦点环。 */

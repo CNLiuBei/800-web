@@ -421,3 +421,123 @@
 }
 @keyframes offline-pop { from { opacity: 0; transform: translate(-50%, -0.5rem); } }
 .offline-banner svg { flex: 0 0 auto; }
+
+/* ===== 通用页面头 ===== */
+.page-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.25rem;
+    padding: 0 1.5rem 1.25rem;
+}
+.page-header-copy { min-width: 0; }
+.page-eyebrow {
+    margin-bottom: 0.35rem;
+    color: var(--fg-muted);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+.page-title {
+    font-size: clamp(2rem, 4vw, 3.25rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.055em;
+}
+.page-description {
+    max-width: 36rem;
+    margin-top: 0.75rem;
+    color: var(--fg-muted);
+    font-size: 0.95rem;
+    line-height: 1.65;
+}
+.page-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex: 0 0 auto;
+}
+.page-primary-action,
+.page-secondary-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 2.45rem;
+    padding: 0 1.05rem;
+    border-radius: 999px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+}
+.page-primary-action {
+    border: none;
+    background: var(--fg);
+    color: var(--bg);
+}
+.page-secondary-action {
+    border: 1px solid var(--border);
+    background: var(--overlay);
+    color: var(--fg);
+}
+
+/* ===== 片库工具栏 ===== */
+.catalog-toolbar {
+    display: grid;
+    grid-template-columns: minmax(12rem, 1fr) minmax(9rem, auto) auto;
+    align-items: end;
+    gap: 0.75rem;
+    padding: 0 1.5rem 1rem;
+}
+.catalog-filter,
+.catalog-sort {
+    display: grid;
+    gap: 0.35rem;
+    color: var(--fg-muted);
+    font-size: 0.76rem;
+    font-weight: 700;
+}
+.catalog-filter input,
+.catalog-sort select {
+    height: 2.55rem;
+    border: 1px solid var(--border);
+    border-radius: 0.85rem;
+    background: var(--overlay);
+    color: var(--fg);
+    outline: none;
+}
+.catalog-filter input { padding: 0 0.9rem; }
+.catalog-sort select { padding: 0 2rem 0 0.85rem; }
+.catalog-filter input:focus,
+.catalog-sort select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.16);
+}
+.catalog-summary {
+    justify-self: end;
+    padding-bottom: 0.62rem;
+    color: var(--fg-muted);
+    font-size: 0.82rem;
+}
+
+@media (max-width: 720px) {
+    .page-header {
+        align-items: stretch;
+        flex-direction: column;
+        padding: 0 1rem 1rem;
+    }
+    .page-actions { width: 100%; }
+    .page-primary-action,
+    .page-secondary-action { flex: 1; }
+    .catalog-toolbar {
+        grid-template-columns: 1fr;
+        padding: 0 1rem 0.75rem;
+    }
+    .catalog-summary {
+        justify-self: start;
+        padding-bottom: 0;
+    }
+}
+
+/* TODO: 下一轮统一收藏、历史、账号页的 page-header 与 toolbar 样式。 */
