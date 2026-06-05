@@ -1,9 +1,11 @@
-// Service Worker 救援版
+// Service Worker rescue build.
 //
-// iOS Safari 一旦旧 SW 返回带 redirected=true 的导航响应，会直接阻止页面打开。
-// 这一版只做一件事：安装后立即接管、清理旧缓存、注销自身，让后续访问回到浏览器原生网络加载。
+// iOS Safari can fail hard when an old Service Worker returns a navigation
+// Response with redirected=true. This build only takes over, clears old
+// gy-* caches, unregisters itself, and navigates controlled pages back to
+// normal browser network loading.
 
-const VERSION = 'v38-rescue';
+const VERSION = 'v39-rescue';
 
 self.addEventListener('install', (event) => {
     event.waitUntil(self.skipWaiting());
