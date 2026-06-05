@@ -16,6 +16,7 @@ export async function render(container, params) {
     container.scrollTop = 0;
     const catalog = CATALOG_MAP[params.category];
     if (!catalog) { container.innerHTML = '<div class="page-empty">未知分类</div>'; return; }
+    const initialQuery = readCatalogQuery(params.query);
 
     await loadCSS('styles/layout.css');
 
@@ -56,6 +57,8 @@ export async function render(container, params) {
     const sortSelect = container.querySelector('#catalog-sort');
     const summary = container.querySelector('#catalog-summary');
     const refresh = container.querySelector('#catalog-refresh');
+    filterInput.value = initialQuery.keyword;
+    sortSelect.value = initialQuery.sort;
     grid.showSkeleton(16);
 
     let skip = 0;
@@ -97,6 +100,18 @@ export async function render(container, params) {
             setStatus('<div class="load-end">没有更多了</div>');
         } else {
             setStatus('');
+        }
+    };
+
+    const syncUrl = () => {
+        const keyword = filterInput.value.trim();
+        const sorter = sortSelect.value;
+        const search = new URLSearchParams();
+        if (keyword) search.set('q', keyword);
+        if (sorter !== 'default') search.set('sort', sorter);
+        const nextHash = `#/${params.category}${search.toString() ? `?${search}` : ''}`;
+        if (location.hash !== nextHash) {
+            history.replaceState(null, '', `${location.pathname}${location.search}${nextHash}`);
         }
     };
 
@@ -148,8 +163,16 @@ export async function render(container, params) {
 
     await loadPage();
 
-    filterInput.addEventListener('input', renderVisible);
-    sortSelect.addEventListener('change', renderVisible);
+    let urlSyncTimer = null;
+    filterInput.addEventListener('input', () => {
+        renderVisible();
+        clearTimeout(urlSyncTimer);
+        urlSyncTimer = setTimeout(syncUrl, 180);
+    });
+    sortSelect.addEventListener('change', () => {
+        renderVisible();
+        syncUrl();
+    });
     refresh.addEventListener('click', () => {
         skip = 0;
         ended = false;
@@ -157,6 +180,7 @@ export async function render(container, params) {
         seen.clear();
         filterInput.value = '';
         sortSelect.value = 'default';
+        syncUrl();
         grid.showSkeleton(16);
         setSummary();
         loadPage();
@@ -175,7 +199,18 @@ export async function render(container, params) {
     };
     app.addEventListener('scroll', onScroll, { passive: true });
 
-    return () => app.removeEventListener('scroll', onScroll);
+    return () => {
+        clearTimeout(urlSyncTimer);
+        app.removeEventListener('scroll', onScroll);
+    };
 }
 
-// TODO: 下一轮将分类筛选同步到 URL，支持分享带筛选条件的片库链接。
+function readCatalogQuery(query) {
+    const sorter = query?.get?.('sort') || 'default';
+    return {
+        keyword: query?.get?.('q') || '',
+        sort: ['default', 'year-desc', 'name-asc'].includes(sorter) ? sorter : 'default',
+    };
+}
+
+// TODO: 下一轮为片库增加可收起的高级筛选栏。

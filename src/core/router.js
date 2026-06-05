@@ -26,7 +26,8 @@ export function reloadRoute() {
 }
 
 function handleRoute() {
-    const hash = location.hash.slice(1) || '/';
+    const rawHash = location.hash.slice(1) || '/';
+    const [hash, queryString = ''] = rawHash.split('?');
     const parts = hash.split('/').filter(Boolean);
     const params = {};
 
@@ -41,7 +42,9 @@ function handleRoute() {
         }
     }
 
-    route.value = { path: hash, parts, params };
+    if (queryString) params.query = new URLSearchParams(queryString);
+
+    route.value = { path: hash, parts, params, query: params.query || new URLSearchParams() };
 
     // 清理上一个页面
     if (currentCleanup) {

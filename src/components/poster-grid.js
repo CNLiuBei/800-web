@@ -11,6 +11,11 @@ class PosterGrid extends HTMLElement {
         this.classList.add('poster-grid');
     }
 
+    disconnectedCallback() {
+        this._preloadObserver?.disconnect();
+        this._preloadObserver = null;
+    }
+
     /**
      * 渲染海报列表
      * @param {Array} items 影片项
@@ -18,6 +23,8 @@ class PosterGrid extends HTMLElement {
      * @param {Object} [opts] { layout: 'grid' | 'row' } 默认 grid（换行网格）
      */
     render(items, type, opts = {}) {
+        this._preloadObserver?.disconnect();
+        this._preloadObserver = null;
         this.classList.toggle('poster-row', opts.layout === 'row');
         this.innerHTML = items.map((item) => this._itemHtml(item, type)).join('');
         this._setupPreload();
@@ -78,16 +85,48 @@ class PosterGrid extends HTMLElement {
         });
     }
 
-    /** 鼠标悬浮 / 触摸按下时预取详情数据（移动端无 hover，用 pointerdown 抢跑） */
+    /** 接近视口、鼠标悬浮或触摸按下时预取详情数据 */
     _setupPreload() {
-        this.querySelectorAll('.poster-item:not([data-preload])').forEach((el) => {
-            el.dataset.preload = '1';
-            const fire = () => preload(el.dataset.type, el.dataset.id);
-            // 桌面 hover 预取
-            el.addEventListener('mouseenter', fire, { once: true });
-            // 移动端：手指按下即预取，先于 click→路由切换，省去进详情页的等待
-            el.addEventListener('pointerdown', fire, { once: true });
+        this.querySelectorAll('.poster-item:not([data-preload])').forEach((itemElement) => {
+            itemElement.dataset.preload = '1';
+            const fire = () => this._preloadItem(itemElement);
+            itemElement.addEventListener('mouseenter', fire, { once: true });
+            itemElement.addEventListener('pointerdown', fire, { once: true });
+            this._getPreloadObserver().observe(itemElement);
         });
+    }
+
+    _getPreloadObserver() {
+        if (this._preloadObserver) return this._preloadObserver;
+        if (!('IntersectionObserver' in window)) {
+            return {
+                observe: (itemElement) => {
+                    window.requestIdleCallback?.(() => this._preloadItem(itemElement), { timeout: 1600 }) ||
+                        setTimeout(() => this._preloadItem(itemElement), 600);
+                },
+                disconnect: () => {},
+                unobserve: () => {},
+            };
+        }
+        this._preloadObserver = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (!entry.isIntersecting) return;
+                const itemElement = entry.target;
+                this._preloadObserver?.unobserve(itemElement);
+                this._preloadItem(itemElement);
+            });
+        }, {
+            root: null,
+            rootMargin: '360px 180px',
+            threshold: 0.01,
+        });
+        return this._preloadObserver;
+    }
+
+    _preloadItem(itemElement) {
+        if (!itemElement?.dataset || itemElement.dataset.preloaded === '1') return;
+        itemElement.dataset.preloaded = '1';
+        preload(itemElement.dataset.type, itemElement.dataset.id);
     }
 
     showSkeleton(count = 8, opts = {}) {
@@ -101,4 +140,4 @@ class PosterGrid extends HTMLElement {
 customElements.define('poster-grid', PosterGrid);
 export default PosterGrid;
 
-// TODO: 下一轮接入 IntersectionObserver，只预取即将进入视口的海报详情。
+// TODO: 下一轮为大屏电视焦点态增加方向键可见焦点环。
