@@ -3,7 +3,7 @@
 import { getCatalog, getMeta } from '../services/api.js';
 import { t } from '../services/i18n.js';
 import { getRecentHistory } from '../services/history-lite.js';
-import { esc, loadCSS } from '../core/html.js';
+import { esc } from '../core/html.js';
 import { navigate } from '../core/router.js';
 import '../components/poster-grid.js';
 
@@ -13,7 +13,6 @@ const idle = (task, timeout = 1200) => {
 };
 
 export async function render(container) {
-    idle(() => loadCSS('styles/home.css?v=33'), 600);
     const recentHistory = getRecentHistory(5);
 
     container.innerHTML = `

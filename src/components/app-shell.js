@@ -1,6 +1,6 @@
 // App Shell - 顶层轻壳。搜索、用户菜单等重交互按需加载。
 
-import { toggleTheme } from '../services/theme.js?v=35';
+import { toggleTheme } from '../services/theme.js';
 import { t } from '../services/i18n.js';
 
 const template = () => `
