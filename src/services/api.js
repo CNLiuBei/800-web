@@ -160,4 +160,14 @@ export function clearCache() {
     cache.clear();
 }
 
+export async function clearPersistentCache() {
+    clearCache();
+    if (!('caches' in window)) return false;
+    try {
+        return await caches.delete(RESPONSE_CACHE);
+    } catch {
+        return false;
+    }
+}
+
 // TODO: 下一轮为 Cache API 增加版本迁移与容量裁剪策略。

@@ -6,6 +6,7 @@ import { canShowInstallEntry, triggerInstall } from '../services/pwa-install.js'
 import { esc, loadCSS } from '../core/html.js';
 import { navigate } from '../core/router.js';
 import { API_BASE } from '../services/config.js';
+import { clearPersistentCache } from '../services/api.js';
 
 export async function render(container) {
     loadCSS('styles/account.css');
@@ -170,6 +171,15 @@ export async function render(container) {
                     </section>
                     ` : ''}
 
+                    <section class="account-card account-maintenance">
+                        <div>
+                            <h2 class="account-card-title">本地缓存</h2>
+                            <p class="account-card-desc">清理片库与详情缓存，不会删除收藏、历史或账号信息。</p>
+                            <div class="account-msg hidden" id="cache-msg"></div>
+                        </div>
+                        <button class="account-secondary-btn" id="clear-cache" type="button">清理缓存</button>
+                    </section>
+
                     <section class="account-card" id="orders-card">
                         <div class="account-card-head">
                             <div>
@@ -196,6 +206,7 @@ export async function render(container) {
 
     bindProfileForm(container);
     bindPasswordForm(container);
+    bindCacheAction(container);
     loadOrders(container);
     refreshOverview(container); // 渲染后异步拉取最新 VIP 状态与注册时间，更新概览
 
@@ -237,6 +248,20 @@ function iconDiamond() {
 
 function iconChevronRight() {
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>';
+}
+
+function bindCacheAction(container) {
+    const btn = container.querySelector('#clear-cache');
+    const msg = container.querySelector('#cache-msg');
+    if (!btn || !msg) return;
+    btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        btn.textContent = '清理中...';
+        const cleared = await clearPersistentCache();
+        btn.disabled = false;
+        btn.textContent = '清理缓存';
+        showMsg(msg, cleared ? '本地缓存已清理' : '内存缓存已清理', true);
+    });
 }
 
 // 显示表单内联消息（成功/错误）

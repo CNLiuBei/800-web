@@ -481,6 +481,39 @@
     flex: 0 0 auto;
 }
 
+/* 本地缓存维护 */
+.account-maintenance {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.account-maintenance .account-msg {
+    width: fit-content;
+    margin-top: 0.85rem;
+}
+
+.account-secondary-btn {
+    flex: 0 0 auto;
+    min-height: 2.55rem;
+    padding: 0 1rem;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    background: var(--overlay);
+    color: var(--fg);
+    font-size: 0.9rem;
+    font-weight: 650;
+    cursor: pointer;
+    transition: background 150ms, opacity 150ms;
+}
+
+.account-secondary-btn:hover { background: var(--card-bg); }
+.account-secondary-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
 /* 危险区 */
 .account-danger {
     display: flex;
@@ -669,6 +702,7 @@
     .account-signout,
     .account-input,
     .account-btn,
+    .account-secondary-btn,
     .account-danger-btn {
         min-height: 3rem;
     }
@@ -678,6 +712,7 @@
     }
 
     .account-btn,
+    .account-secondary-btn,
     .account-danger-btn {
         width: 100%;
         justify-self: stretch;
@@ -688,6 +723,7 @@
     }
 
     .account-install,
+    .account-maintenance,
     .account-danger {
         align-items: stretch;
         flex-direction: column;

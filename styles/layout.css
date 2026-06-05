@@ -452,6 +452,7 @@
     font-size: 0.95rem;
     line-height: 1.65;
 }
+.page-meta { margin-top: 0.75rem; }
 .page-actions {
     display: flex;
     align-items: center;
@@ -481,6 +482,7 @@
     background: var(--overlay);
     color: var(--fg);
 }
+button.page-secondary-action { font-family: inherit; }
 
 /* ===== 片库工具栏 ===== */
 .catalog-toolbar {
@@ -540,4 +542,4 @@
     }
 }
 
-/* TODO: 下一轮统一收藏、历史、账号页的 page-header 与 toolbar 样式。 */
+/* TODO: 下一轮统一账号页的 page-header 与工具区样式。 */
