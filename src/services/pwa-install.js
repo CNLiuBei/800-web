@@ -8,6 +8,10 @@
 //
 // 抑制策略：已安装（standalone）不提示；用户关闭后一段时间内不再打扰。
 
+import { dismissSiteNotice, showSiteNotice } from './site-notice.js';
+
+const PWA_NOTICE_ID = 'pwa-install';
+
 const DISMISS_KEY = 'gy_pwa_install_dismissed_at';
 const DISMISS_DAYS = 14; // 关闭后多少天内不再提示
 const SHOW_DELAY = 4000; // 进入站点多久后再提示，避免打断首屏
@@ -102,67 +106,42 @@ export function initPwaInstall() {
 }
 
 function removeBanner() {
-    document.getElementById('pwa-install-banner')?.remove();
+    dismissSiteNotice(PWA_NOTICE_ID);
 }
 
 function showInstallBanner(platform) {
     if (isStandalone()) return;
-    if (document.getElementById('pwa-install-banner')) return;
-    // 更新提示优先：避免两个底部横幅重叠
-    if (document.getElementById('update-banner')) return;
-    // 播放页（全屏播放器）不打断观影
     if (location.hash.startsWith('#/play/')) return;
 
-    const banner = document.createElement('div');
-    banner.id = 'pwa-install-banner';
-    banner.className = 'pwa-install-banner';
-    banner.setAttribute('role', 'dialog');
-    banner.setAttribute('aria-label', '添加到主屏幕');
-
-    if (platform === 'ios') {
-        banner.innerHTML = `
-            <div class="pwa-install-body">
-                <img class="pwa-install-icon" src="/icons/apple-touch-icon.png" alt="800影视" width="44" height="44">
-                <div class="pwa-install-text">
-                    <div class="pwa-install-title">添加到主屏幕</div>
-                    <div class="pwa-install-desc">点击底部 <span class="pwa-ios-share" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>
-                    </span> 分享，选择「添加到主屏幕」</div>
-                </div>
-            </div>
-            <button class="pwa-install-close" aria-label="关闭">&times;</button>
-        `;
-    } else {
-        banner.innerHTML = `
-            <div class="pwa-install-body">
-                <img class="pwa-install-icon" src="/icons/icon-192.png" alt="800影视" width="44" height="44">
-                <div class="pwa-install-text">
-                    <div class="pwa-install-title">安装 800影视</div>
-                    <div class="pwa-install-desc">添加到主屏，全屏沉浸观影，秒开免打扰</div>
-                </div>
-            </div>
-            <div class="pwa-install-actions">
-                <button class="pwa-install-btn" id="pwa-install-do">安装</button>
-                <button class="pwa-install-close" aria-label="关闭">&times;</button>
-            </div>
-        `;
-    }
-
-    document.body.appendChild(banner);
-
-    banner.querySelector('.pwa-install-close')?.addEventListener('click', () => {
-        markDismissed();
-        removeBanner();
+    const ios = platform === 'ios';
+    showSiteNotice('', {
+        id: PWA_NOTICE_ID,
+        persistent: true,
+        tone: 'info',
+        title: ios ? '添加到主屏幕' : '安装 800影视',
+        subtitle: ios
+            ? '点击浏览器底部分享按钮，选择「添加到主屏幕」'
+            : '添加到主屏，全屏沉浸观影，秒开免打扰',
+        actions: ios
+            ? [{ key: 'dismiss', label: '知道了', dismiss: true, onClick: () => markDismissed() }]
+            : [
+                {
+                    key: 'install',
+                    label: '安装',
+                    primary: true,
+                    onClick: async () => {
+                        if (!deferredPrompt) {
+                            markDismissed();
+                            return;
+                        }
+                        deferredPrompt.prompt();
+                        try { await deferredPrompt.userChoice; } catch {}
+                        deferredPrompt = null;
+                        markDismissed();
+                    },
+                },
+                { key: 'dismiss', label: '稍后', dismiss: true, onClick: () => markDismissed() },
+            ],
+        onDismiss: () => markDismissed(),
     });
-
-    if (platform === 'android') {
-        banner.querySelector('#pwa-install-do')?.addEventListener('click', async () => {
-            if (!deferredPrompt) { removeBanner(); return; }
-            deferredPrompt.prompt();
-            try { await deferredPrompt.userChoice; } catch {}
-            deferredPrompt = null;
-            removeBanner();
-            markDismissed();
-        });
-    }
 }

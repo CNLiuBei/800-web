@@ -1,7 +1,14 @@
 .git/
 .github/
 .wrangler/
+.dryrun/
 wrangler.toml
 dev-server.mjs
 ARCHITECTURE.md
 ROADMAP.md
+demo/
+player/
+vendor/
+scripts/
+.cdn-publish-manifest.json
+_headers

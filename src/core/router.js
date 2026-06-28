@@ -6,6 +6,7 @@ export const route = signal({ path: '/', parts: [], params: {} });
 
 const routes = [];
 let currentCleanup = null;
+let routeRunId = 0;
 
 export function defineRoute(pattern, handler) {
     routes.push({ pattern, handler });
@@ -26,6 +27,7 @@ export function reloadRoute() {
 }
 
 function handleRoute() {
+    const runId = ++routeRunId;
     const rawHash = location.hash.slice(1) || '/';
     const [hash, queryString = ''] = rawHash.split('?');
     const parts = hash.split('/').filter(Boolean);
@@ -59,14 +61,22 @@ function handleRoute() {
             if (result && typeof result.then === 'function') {
                 result
                     .then(cleanup => {
-                        if (typeof cleanup === 'function') currentCleanup = cleanup;
+                        if (typeof cleanup !== 'function') return;
+                        if (runId === routeRunId) {
+                            currentCleanup = cleanup;
+                        } else {
+                            cleanup();
+                        }
                     })
-                    .catch(err => showRouteError(err)); // 异步错误兜底，防白屏
+                    .catch(err => {
+                        if (runId === routeRunId) showRouteError(err);
+                    }); // 异步错误兜底，防白屏
             } else if (typeof result === 'function') {
-                currentCleanup = result;
+                if (runId === routeRunId) currentCleanup = result;
+                else result();
             }
         } catch (err) {
-            showRouteError(err); // 同步错误兜底
+            if (runId === routeRunId) showRouteError(err); // 同步错误兜底
         }
     }
 }
@@ -134,23 +144,45 @@ export function getPrefetched(url) {
 // 注意：startViewTransition 的回调是异步执行的，且会吞掉回调内的 rejection，
 // 因此这里用独立 Promise 显式桥接 render 的成功/失败。
 //
+// Safari 在已有过渡进行中再次调用 startViewTransition 时会同步抛 AbortError，
+// 并中止前一个过渡；移动端快速点底部 Tab 时容易触发，需串行化并在失败时降级为直出。
+//
 // 滚动归零放在 VT 回调内（fn 替换内容前）执行：此时 old 快照已捕获并冻结显示，
 // 对真实 DOM 的 scrollTop 修改不会单独绘制，新内容从顶部开始，避免「旧页跳到顶部再切换」的闪烁。
+let transitionLock = Promise.resolve();
+
+function isTransitionAbortError(err) {
+    return err?.name === 'AbortError' || err?.name === 'InvalidStateError';
+}
+
 export function transition(fn) {
     const resetScroll = () => {
         const app = document.getElementById('app');
         if (app) app.scrollTop = 0;
     };
-    if (document.startViewTransition) {
-        return new Promise((resolve, reject) => {
-            document.startViewTransition(() => {
-                resetScroll();
-                // 回调内执行 render，并把其结果桥接到外层 Promise
-                return Promise.resolve()
-                    .then(fn)
-                    .then(resolve, reject);
-            });
-        });
+    const runDirect = () => Promise.resolve()
+        .then(() => { resetScroll(); return fn(); });
+
+    if (!document.startViewTransition) {
+        return runDirect();
     }
-    return Promise.resolve().then(() => { resetScroll(); return fn(); });
+
+    const attempt = () => new Promise((resolve, reject) => {
+        const invoke = () => Promise.resolve()
+            .then(() => { resetScroll(); return fn(); });
+        try {
+            const vt = document.startViewTransition(() => invoke().then(resolve, reject));
+            vt?.finished?.catch(() => {});
+        } catch (err) {
+            if (isTransitionAbortError(err)) invoke().then(resolve, reject);
+            else invoke().then(resolve, reject);
+        }
+    });
+
+    const mine = transitionLock
+        .catch(() => {})
+        .then(attempt)
+        .catch((err) => (isTransitionAbortError(err) ? runDirect() : Promise.reject(err)));
+    transitionLock = mine.catch(() => {});
+    return mine;
 }

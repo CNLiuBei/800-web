@@ -11,17 +11,24 @@
 /* ===== 默认：换行网格（分类/收藏/历史/搜索）。尺寸与首页横向行一致 ===== */
 poster-grid, .poster-grid {
     display: flex; flex-wrap: wrap; padding: 0 1.5rem;
+    min-width: 0;
 }
 
 .poster-item {
     flex: 0 0 calc(100% / 8 - 0.9rem); max-width: calc(100% / 8 - 0.9rem);
+    position: relative;
+    display: block;
     padding: 0.6rem; cursor: pointer;
     text-decoration: none; color: var(--fg);
+    border-radius: 18px;
+    outline: none;
+    min-width: 0;
 }
 
 /* 图片容器：承载海报 + 续播进度条；景深阴影 + 悬停放大 */
 .poster-img-wrap {
     position: relative;
+    z-index: 1;
     width: 100%; aspect-ratio: 2 / 3;
     border-radius: 14px; overflow: hidden;
     background: var(--overlay);
@@ -33,6 +40,14 @@ poster-grid, .poster-grid {
 .poster-item:hover .poster-img-wrap {
     transform: scale(1.06) translateY(-2px);
     box-shadow: 0 16px 40px rgba(0,0,0,0.28);
+}
+.poster-item:focus-visible .poster-img-wrap,
+.poster-item.is-spatial-focused .poster-img-wrap {
+    transform: scale(1.08) translateY(-3px);
+    box-shadow:
+        0 0 0 3px rgba(255,255,255,0.92),
+        0 0 0 6px color-mix(in srgb, var(--accent) 75%, transparent),
+        0 20px 46px rgba(0,0,0,0.34);
 }
 
 .poster-img {
@@ -54,6 +69,39 @@ poster-grid, .poster-grid {
     height: 3px; background: rgba(0,0,0,0.45);
 }
 .poster-progress-bar { height: 100%; background: var(--accent); }
+.poster-progress-completed .poster-progress-bar { background: #34c759; }
+.poster-progress-label {
+    position: absolute;
+    left: 0.45rem;
+    right: 0.45rem;
+    bottom: 0.45rem;
+    width: fit-content;
+    max-width: calc(100% - 0.9rem);
+    padding: 0.2rem 0.42rem;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.58);
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    text-shadow: var(--text-on-image);
+}
+.poster-playback-completed {
+    background: rgba(52, 199, 89, 0.82);
+}
+.poster-playback-partial {
+    background: rgba(255, 204, 102, 0.88);
+    color: #1f1300;
+}
+.poster-item.has-watched .poster-progress-label {
+    opacity: 1;
+    transform: translateY(0);
+}
 .poster-badge {
     position: absolute;
     top: 0.45rem;
@@ -76,18 +124,140 @@ poster-grid, .poster-grid {
     transform: translateY(0);
 }
 
+.poster-card-action {
+    position: absolute;
+    top: 0.45rem;
+    right: 0.45rem;
+    min-width: 2.35rem;
+    min-height: 1.65rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.5rem;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.68);
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 750;
+    line-height: 1;
+    opacity: 0;
+    transform: translateY(-0.2rem);
+    transition: opacity 180ms ease, transform 180ms ease, background 180ms ease;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    text-shadow: var(--text-on-image);
+}
+.poster-quick-later {
+    position: absolute;
+    top: 0.45rem;
+    right: 0.45rem;
+    width: 2rem;
+    height: 2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.68);
+    color: #fff;
+    opacity: 0;
+    transform: translateY(-0.2rem);
+    transition: opacity 180ms ease, transform 180ms ease, background 180ms ease, color 180ms ease;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    text-shadow: var(--text-on-image);
+}
+.poster-quick-later:hover,
+.poster-quick-later:focus-visible {
+    background: rgba(10,132,255,0.9);
+    outline: none;
+}
+.poster-quick-later.active {
+    background: rgba(48,209,88,0.92);
+    color: #07140b;
+}
+.poster-card-action:hover,
+.poster-card-action:focus-visible {
+    background: rgba(255,59,48,0.88);
+    outline: none;
+}
+.poster-item:hover .poster-card-action,
+.poster-item:focus-within .poster-card-action,
+.poster-item.is-spatial-focused .poster-card-action,
+.poster-item:hover .poster-quick-later,
+.poster-item:focus-within .poster-quick-later,
+.poster-item.is-spatial-focused .poster-quick-later {
+    opacity: 1;
+    transform: translateY(0);
+}
+
 .poster-title {
+    position: relative;
+    z-index: 0;
+    display: block;
     margin-top: 0.6rem; font-size: 0.85rem; font-weight: 500;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     opacity: 0.85; padding: 0 0.1rem;
+    line-height: 1.32;
     transition: opacity 200ms;
 }
-.poster-item:hover .poster-title { opacity: 1; }
+.poster-item:hover .poster-title,
+.poster-item:focus-visible .poster-title,
+.poster-item.is-spatial-focused .poster-title { opacity: 1; }
 .poster-subtitle {
+    position: relative;
+    z-index: 0;
+    display: block;
     margin-top: 0.18rem;
     padding: 0 0.1rem;
     color: var(--fg-muted);
     font-size: 0.72rem;
+    line-height: 1.32;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.poster-action-toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(1.25rem + var(--safe-bottom));
+    z-index: 1200;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.8rem;
+    max-width: min(22rem, calc(100vw - 2rem));
+    padding: 0.7rem 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    background: var(--card-bg);
+    color: var(--fg);
+    box-shadow: 0 14px 40px rgba(0,0,0,0.28);
+    transform: translateX(-50%);
+    animation: poster-toast-in 180ms ease;
+}
+.poster-action-toast span {
+    min-width: 0;
+    font-size: 0.88rem;
+    font-weight: 650;
+}
+.poster-action-toast a,
+.poster-toast-action {
+    flex: 0 0 auto;
+    border: 0;
+    background: transparent;
+    color: var(--accent);
+    font-size: 0.84rem;
+    font-weight: 750;
+    text-decoration: none;
+    cursor: pointer;
+    font-family: inherit;
+}
+.poster-toast-action:hover,
+.poster-action-toast a:hover {
+    text-decoration: underline;
+}
+@keyframes poster-toast-in {
+    from { opacity: 0; transform: translate(-50%, 0.35rem); }
 }
 
 /* ===== 横向滑动行（首页）===== */
@@ -120,26 +290,72 @@ poster-grid.poster-row .poster-item {
 @media (max-width: 1600px) { poster-grid.poster-row .poster-item { width: calc(100% / 6 - 0.9rem); } }
 @media (max-width: 1300px) { poster-grid.poster-row .poster-item { width: calc(100% / 5 - 0.9rem); } }
 @media (max-width: 1000px) { poster-grid.poster-row .poster-item { width: calc(100% / 4 - 0.8rem); } }
-@media (max-width: 640px)  { poster-grid.poster-row .poster-item { width: calc(100% / 2.6 - 0.6rem); } }
+@media (max-width: 640px)  { poster-grid.poster-row .poster-item { width: clamp(7.35rem, 38vw, 9.25rem); } }
 
 /* 触屏不放大（避免错位），保留阴影反馈 */
 @media (hover: none) {
     .poster-item:hover .poster-img-wrap { transform: none; }
+    .poster-item:focus-visible .poster-img-wrap,
+    .poster-item.is-spatial-focused .poster-img-wrap { transform: scale(1.04); }
     .poster-badge { display: none; }
+}
+@media (hover: none) and (min-width: 641px) {
+    .poster-card-action,
+    .poster-quick-later {
+        opacity: 1;
+        transform: none;
+    }
 }
 
 /* 移动端：收紧左右留白，给内容更多宽度 */
 @media (max-width: 640px) {
     .section-title { font-size: 1.15rem; padding: 0 1rem; margin-bottom: 0.6rem; }
     .catalog-section { margin-bottom: 1.75rem; }
-    poster-grid, .poster-grid { padding: 0 1rem; }
-    poster-grid.poster-row { padding: 0.5rem 1rem 1rem; scroll-padding-left: 1rem; }
-    .poster-title { font-size: 0.8rem; }
+    poster-grid, .poster-grid {
+        padding: 0 0.82rem;
+        column-gap: 0.15rem;
+    }
+    poster-grid.poster-row {
+        gap: 0.15rem;
+        padding: 0.35rem 0.82rem 1.1rem;
+        scroll-padding-left: 0.82rem;
+        scroll-snap-type: x mandatory;
+    }
+    .poster-item {
+        padding: 0.46rem;
+        border-radius: 16px;
+    }
+    .poster-img-wrap {
+        border-radius: 13px;
+        box-shadow: none;
+    }
+    .poster-title { margin-top: 0.5rem; font-size: 0.8rem; line-height: 1.3; }
+    .poster-subtitle { font-size: 0.68rem; line-height: 1.3; }
+    .poster-progress-label { font-size: 0.62rem; bottom: 0.35rem; left: 0.35rem; right: 0.35rem; }
+    .poster-card-action,
+    .poster-quick-later {
+        display: none;
+    }
+    .poster-action-toast {
+        bottom: calc(4.9rem + var(--safe-bottom));
+        width: calc(100vw - 1.25rem);
+        justify-content: space-between;
+    }
+}
+
+@media (max-width: 340px) {
+    .poster-item {
+        flex-basis: calc(50% - 0.45rem);
+        max-width: calc(50% - 0.45rem);
+    }
+    poster-grid.poster-row .poster-item {
+        width: calc(50% - 0.45rem);
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
     .poster-img-wrap, .poster-img, .poster-title { transition: none; }
     .poster-item:hover .poster-img-wrap { transform: none; }
+    .poster-item:focus-visible .poster-img-wrap,
+    .poster-item.is-spatial-focused .poster-img-wrap { transform: none; }
 }
-
-/* TODO: 下一轮为大屏电视焦点态增加方向键可见焦点环。 */

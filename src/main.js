@@ -1,42 +1,49 @@
 // 应用入口
 
-import { defineRoute, init, transition } from './core/router.js';
+import { defineRoute, init, route, transition } from './core/router.js';
 import { initTheme } from './services/theme.js';
 import { initI18n } from './services/i18n.js';
+import { initAuth } from './services/auth.js';
+import { initSpatialNavigation } from './services/spatial-navigation.js';
+import { initCommunityGrowthTracking } from './services/community-growth.js';
 import { loadCSS } from './core/html.js';
+import { resetPageMeta } from './core/head.js';
+import { prefetchPlayerAssets } from './services/player-module.js';
+import { WEB_STATIC_VERSION } from './services/config.js';
+import { showSiteNotice } from './services/site-notice.js';
 import './components/app-shell.js';
+import '@gy/library';
+
+const accountPageModule = () => import(`./pages/account.js?v=${WEB_STATIC_VERSION}`);
+const sessionsPageModule = () => import(`./pages/sessions.js?v=${WEB_STATIC_VERSION}`);
 
 const idle = (task, timeout = 1200) => {
     if ('requestIdleCallback' in window) requestIdleCallback(task, { timeout });
     else setTimeout(task, 0);
 };
 
+const PLAYER_PAGE_MODULE = `./pages/player.js?v=${WEB_STATIC_VERSION}`;
+const homePageLoader = () => import('./pages/home.js');
 const routeModules = new Map();
-const warmStyles = [
-    'styles/base.css',
-    'styles/nav.css',
+// idle 预热：仅高频轻量路由；account/player 等大 chunk 靠 hover 预热（warmRouteForHash）
+const idleWarmStyles = [
     'styles/layout.css',
-    'styles/poster.css',
     'styles/home.css',
-    'styles/detail.css',
-    'styles/account.css',
-    'styles/vip.css',
 ];
 
-const warmPages = [
+const idleWarmPages = [
     ['catalog', () => import('./pages/catalog.js')],
+    ['search', () => import('./pages/search.js')],
     ['detail', () => import('./pages/detail.js')],
-    ['favorites', () => import('./pages/favorites.js')],
-    ['history', () => import('./pages/history.js')],
-    ['account', () => import('./pages/account.js')],
-    ['vip', () => import('./pages/vip.js')],
-    ['player', () => import('./pages/player.js')],
 ];
 
 // 初始化
 initTheme();
 initI18n();
-['styles/base.css', 'styles/nav.css', 'styles/layout.css', 'styles/poster.css', 'styles/home.css'].forEach(loadCSS);
+initAuth().catch(() => {});
+initSpatialNavigation();
+initCommunityGrowthTracking();
+['styles/base.css', 'styles/nav.css', 'styles/layout.css', 'styles/poster.css', 'styles/home.css', 'styles/site-notice.css'].forEach(loadCSS);
 idle(async () => {
     const [{ initPwaInstall }, { initNetworkStatus }] = await Promise.all([
         import('./services/pwa-install.js'),
@@ -57,9 +64,24 @@ if (location.search.includes('source=pwa')) {
 // 获取内容容器
 const getApp = () => document.getElementById('app');
 
+/** 首屏占位：避免 route spinner 与 home skeleton 连续闪两次「加载中」 */
+function showHomeBootSkeleton() {
+    const app = getApp();
+    if (!app || app.querySelector('.home-hero, .page-loading, .route-error')) return;
+    app.innerHTML = `
+        <div class="home-hero hero-loading" id="home-hero" aria-hidden="true"></div>
+        <section class="catalog-section" aria-hidden="true">
+            <div class="poster-grid poster-row" style="display:flex;flex-wrap:nowrap;overflow:hidden;padding:1rem 1.5rem;gap:.6rem">
+                ${'<div class="poster-item" style="flex:0 0 auto;width:calc(100%/6 - .9rem)"><div class="poster-img-wrap skeleton"></div></div>'.repeat(8)}
+            </div>
+        </section>
+    `;
+}
+
 // 定义路由（具体路由在前，通配在后）
 defineRoute('/', async () => {
-    const { render } = await loadRouteModule('home', () => import('./pages/home.js'));
+    showHomeBootSkeleton();
+    const { render } = await loadRouteModule('home', homePageLoader, { showLoading: false });
     return transition(() => render(getApp()));
 });
 
@@ -70,7 +92,7 @@ defineRoute('detail/:type/:id', async (params) => {
 });
 
 defineRoute('play/:type/:id/:videoId?', async (params) => {
-    const { render } = await loadRouteModule('player', () => import('./pages/player.js'));
+    const { render } = await loadRouteModule('player', () => import(PLAYER_PAGE_MODULE));
     return render(getApp(), params);
 });
 
@@ -79,24 +101,79 @@ defineRoute('favorites', async () => {
     return transition(() => render(getApp()));
 });
 
+defineRoute('watch-later', async () => {
+    const { render } = await loadRouteModule('watch-later', () => import('./pages/watch-later.js'));
+    return transition(() => render(getApp()));
+});
+
+defineRoute('subscriptions', async () => {
+    const { render } = await loadRouteModule('subscriptions', () => import('./pages/subscriptions.js'));
+    return transition(() => render(getApp()));
+});
+
+defineRoute('search', async (params) => {
+    const { render } = await loadRouteModule('search', () => import('./pages/search.js'));
+    return transition(() => render(getApp(), params));
+});
+
+defineRoute('rankings', async (params) => {
+    const { render } = await loadRouteModule('rankings', () => import('./pages/rankings.js'));
+    return transition(() => render(getApp(), params));
+});
+
+defineRoute('shorts', async () => {
+    const { render } = await loadRouteModule('shorts', () => import('./pages/shorts.js'));
+    return transition(() => render(getApp()));
+});
+
+defineRoute('live', async (params) => {
+    const { render } = await loadRouteModule('live', () => import('./pages/live.js'));
+    return transition(() => render(getApp(), params));
+});
+
+defineRoute('live/:id', async (params) => {
+    const { render } = await loadRouteModule('live-detail', () => import('./pages/live-detail.js'));
+    return transition(() => render(getApp(), params));
+});
+
 defineRoute('history', async () => {
     const { render } = await loadRouteModule('history', () => import('./pages/history.js'));
     return transition(() => render(getApp()));
 });
 
+defineRoute('account-demo', async () => {
+    const { render } = await loadRouteModule('account-shell-demo', () => import('./pages/account-shell-demo.js'));
+    return transition(() => render(getApp()));
+});
+
 defineRoute('account', async () => {
-    const { render } = await loadRouteModule('account', () => import('./pages/account.js'));
+    const { render } = await loadRouteModule('account', accountPageModule);
     return transition(() => render(getApp()));
 });
 
 defineRoute('account/sessions', async () => {
-    const { render } = await loadRouteModule('sessions', () => import('./pages/sessions.js'));
+    const { render } = await loadRouteModule('sessions', sessionsPageModule);
     return transition(() => render(getApp()));
+});
+
+defineRoute('reset-password', async (params) => {
+    const { render } = await loadRouteModule('reset-password', () => import('./pages/reset-password.js'));
+    return transition(() => render(getApp(), params));
+});
+
+defineRoute('creator/:handle', async (params) => {
+    const { render } = await loadRouteModule('creator-channel', () => import('./pages/creator-channel.js'));
+    return transition(() => render(getApp(), params));
 });
 
 defineRoute('vip', async () => {
     const { render } = await loadRouteModule('vip', () => import('./pages/vip.js'));
     return transition(() => render(getApp()));
+});
+
+defineRoute('requests', async (params) => {
+    const { render } = await loadRouteModule('requests', () => import('./pages/requests.js'));
+    return transition(() => render(getApp(), params));
 });
 
 // 分类页（通配 :category 放最后，避免匹配 favorites/history/vip）
@@ -112,25 +189,80 @@ defineRoute(':category', async (params) => {
 });
 
 // 启动路由
+route.subscribe(resetPageMeta);
+resetPageMeta();
+// 默认首页 chunk 与路由初始化并行拉取，缩短首屏空白
+getRouteModule('home', homePageLoader).catch(() => {});
 init();
 initNavigationWarmup();
 idle(warmRouteAssets, 900);
+if (window.matchMedia?.('(max-width: 980px)').matches) {
+    idle(() => getRouteModule('account', accountPageModule).catch(() => {}), 600);
+}
 
-// Service Worker 救援：iOS Safari 曾因旧 SW 返回重定向响应导致整站打不开。
-// Web 端先禁用离线 SW，启动后主动注销旧注册，确保所有页面回到浏览器原生网络加载。
+// PWA 离线壳：注册保守版 Service Worker，仅缓存应用壳与 GET API 响应。
+// SW 内会重建导航响应，避免 iOS Safari 旧版 redirected Response 问题复发。
+let refreshingForUpdate = false;
+
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshingForUpdate) return;
+        window.location.reload();
+    });
+}
+
 if ('serviceWorker' in navigator) idle(() => {
-    disableServiceWorkers().catch(() => {});
+    registerServiceWorker().catch(() => {});
 }, 2000);
 
-async function disableServiceWorkers() {
-    const registrations = await navigator.serviceWorker.getRegistrations();
-    if (registrations.length === 0) return;
-    await Promise.all(registrations.map((registration) => registration.unregister()));
-    if ('caches' in window) {
-        const keys = await caches.keys();
-        await Promise.all(keys.filter((key) => key.startsWith('gy-')).map((key) => caches.delete(key)));
+async function registerServiceWorker() {
+    const registration = await navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' });
+    registration.update().catch(() => {});
+    if (registration.waiting && navigator.serviceWorker.controller) {
+        refreshingForUpdate = true;
+        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
     }
-    if (navigator.serviceWorker.controller) location.reload();
+    registration.addEventListener('updatefound', () => {
+        const worker = registration.installing;
+        worker?.addEventListener('statechange', () => {
+            if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+                refreshingForUpdate = true;
+                registration.waiting?.postMessage({ type: 'SKIP_WAITING' });
+            }
+        });
+    });
+}
+
+function showUpdateBanner(registration) {
+    if (location.hash.startsWith('#/play/')) {
+        window.addEventListener('hashchange', () => showUpdateBanner(registration), { once: true });
+        return;
+    }
+    showSiteNotice('', {
+        id: 'app-update',
+        persistent: true,
+        tone: 'info',
+        title: '新版本已准备好',
+        subtitle: '刷新后即可使用最新功能与修复',
+        actions: [
+            {
+                key: 'reload',
+                label: '刷新更新',
+                primary: true,
+                keepOpen: true,
+                onClick: () => {
+                    refreshingForUpdate = true;
+                    registration.waiting?.postMessage({ type: 'SKIP_WAITING' });
+                    setTimeout(() => window.location.reload(), 1800);
+                },
+            },
+            {
+                key: 'later',
+                label: '稍后',
+                dismiss: true,
+            },
+        ],
+    });
 }
 
 function getRouteModule(key, loader) {
@@ -143,17 +275,20 @@ function getRouteModule(key, loader) {
     return routeModules.get(key);
 }
 
-async function loadRouteModule(key, loader) {
+async function loadRouteModule(key, loader, { showLoading = true } = {}) {
     const modulePromise = getRouteModule(key, loader);
     let settled = false;
-    const loadingTimer = setTimeout(() => {
-        if (!settled) showRouteLoading();
-    }, 120);
+    let loadingTimer = null;
+    if (showLoading) {
+        loadingTimer = setTimeout(() => {
+            if (!settled) showRouteLoading();
+        }, 120);
+    }
     try {
         return await modulePromise;
     } finally {
         settled = true;
-        clearTimeout(loadingTimer);
+        if (loadingTimer) clearTimeout(loadingTimer);
     }
 }
 
@@ -164,8 +299,8 @@ function showRouteLoading() {
 }
 
 function warmRouteAssets() {
-    warmStyles.forEach(loadCSS);
-    for (const [key, loader] of warmPages) {
+    idleWarmStyles.forEach(loadCSS);
+    for (const [key, loader] of idleWarmPages) {
         idle(() => getRouteModule(key, loader).catch(() => {}), 1800);
     }
 }
@@ -184,14 +319,28 @@ function initNavigationWarmup() {
 async function warmRouteForHash(href) {
     const path = href?.slice(1).split('?')[0] || '/';
     const [_, first, second] = path.split('/');
-    if (!first) return getRouteModule('home', () => import('./pages/home.js'));
-    if (first === 'detail') return getRouteModule('detail', () => import('./pages/detail.js'));
-    if (first === 'play') return getRouteModule('player', () => import('./pages/player.js'));
+    if (!first) return getRouteModule('home', homePageLoader);
+    if (first === 'detail') {
+        prefetchPlayerAssets().catch(() => {});
+        return getRouteModule('detail', () => import('./pages/detail.js'));
+    }
+    if (first === 'play') {
+        prefetchPlayerAssets().catch(() => {});
+        return getRouteModule('player', () => import(PLAYER_PAGE_MODULE));
+    }
     if (first === 'favorites') return getRouteModule('favorites', () => import('./pages/favorites.js'));
+    if (first === 'watch-later') return getRouteModule('watch-later', () => import('./pages/watch-later.js'));
+    if (first === 'subscriptions') return getRouteModule('subscriptions', () => import('./pages/subscriptions.js'));
+    if (first === 'rankings') return getRouteModule('rankings', () => import('./pages/rankings.js'));
+    if (first === 'shorts') return getRouteModule('shorts', () => import('./pages/shorts.js'));
+    if (first === 'live' && second) return getRouteModule('live-detail', () => import('./pages/live-detail.js'));
+    if (first === 'live') return getRouteModule('live', () => import('./pages/live.js'));
     if (first === 'history') return getRouteModule('history', () => import('./pages/history.js'));
     if (first === 'vip') return getRouteModule('vip', () => import('./pages/vip.js'));
-    if (first === 'account' && second === 'sessions') return getRouteModule('sessions', () => import('./pages/sessions.js'));
-    if (first === 'account') return getRouteModule('account', () => import('./pages/account.js'));
+    if (first === 'requests') return getRouteModule('requests', () => import('./pages/requests.js'));
+    if (first === 'account' && second === 'sessions') return getRouteModule('sessions', sessionsPageModule);
+    if (first === 'account-demo') return loadRouteModule('account-shell-demo', () => import('./pages/account-shell-demo.js'));
+    if (first === 'account') return getRouteModule('account', accountPageModule);
     if (['movie', 'tv', 'anime'].includes(first)) return getRouteModule('catalog', () => import('./pages/catalog.js'));
     return getRouteModule('notfound', () => import('./pages/notfound.js'));
 }

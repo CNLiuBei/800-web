@@ -2,6 +2,10 @@
 
 import { toggleTheme } from '../services/theme.js';
 import { t } from '../services/i18n.js';
+import { user, initAuth } from '../services/auth.js';
+import { notificationSummary, loadNotifications, startNotificationPolling, fetchNotificationPreferences } from '../services/notifications.js';
+import { effect } from '../core/signal.js';
+import { loadCSS } from '../core/html.js';
 
 const template = () => `
 <nav id="navbar">
@@ -11,6 +15,7 @@ const template = () => `
         <a href="#/movie" class="nav-tab" data-route="movie">${t('nav.movie')}</a>
         <a href="#/tv" class="nav-tab" data-route="tv">${t('nav.tv')}</a>
         <a href="#/anime" class="nav-tab" data-route="anime">${t('nav.anime')}</a>
+        <a href="#/rankings" class="nav-tab" data-route="rankings">排行</a>
         <a href="#/favorites" class="nav-tab" data-route="favorites">收藏</a>
         <a href="#/vip" class="nav-tab" data-route="vip">VIP</a>
     </div>
@@ -21,7 +26,7 @@ const template = () => `
         <button class="nav-btn" id="theme-toggle" title="${t('nav.theme')}" aria-label="${t('nav.theme')}">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
         </button>
-        <button class="nav-btn" id="user-btn" title="用户" aria-label="用户菜单">
+        <button class="nav-btn" id="user-btn" title="用户" aria-label="用户菜单" aria-haspopup="menu" aria-expanded="false">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </button>
     </div>
@@ -47,8 +52,12 @@ const template = () => `
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3z"/></svg>
         <span>${t('nav.anime')}</span>
     </a>
-    <a href="#/account" class="bottom-tab" data-route="favorites" id="bottom-user">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <a href="#/requests" class="bottom-tab" data-route="requests">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        <span>求片</span>
+    </a>
+    <a href="#/account" class="bottom-tab" data-route="account">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
         <span>我的</span>
     </a>
 </nav>
@@ -61,6 +70,7 @@ class AppShell extends HTMLElement {
         this.setupNavHighlight();
         this.setupLazySearch();
         this.setupLazyUser();
+        this.setupNotificationBadge();
         this.setupBackToTop();
     }
 
@@ -76,8 +86,11 @@ class AppShell extends HTMLElement {
                 (route === 'movie' && hash.startsWith('/movie')) ||
                 (route === 'tv' && hash.startsWith('/tv')) ||
                 (route === 'anime' && hash.startsWith('/anime')) ||
-                (route === 'favorites' && (hash.startsWith('/favorites') || hash.startsWith('/history') || hash.startsWith('/account'))) ||
-                (route === 'vip' && hash.startsWith('/vip'));
+                (route === 'requests' && hash.startsWith('/requests')) ||
+                (route === 'rankings' && hash.startsWith('/rankings')) ||
+                (route === 'favorites' && (hash.startsWith('/favorites') || hash.startsWith('/watch-later') || hash.startsWith('/history'))) ||
+                (route === 'vip' && hash.startsWith('/vip')) ||
+                (route === 'account' && hash.startsWith('/account'));
             this.querySelectorAll('.nav-tab, .bottom-tab').forEach(tab => {
                 const active = matchRoute(tab.dataset.route);
                 tab.classList.toggle('active', active);
@@ -100,10 +113,58 @@ class AppShell extends HTMLElement {
     }
 
     setupLazyUser() {
-        this.querySelector('#user-btn').addEventListener('click', async (e) => {
+        const btn = this.querySelector('#user-btn');
+        if (!btn) return;
+        let userModulePromise = null;
+        const preloadUserModule = () => {
+            loadCSS('styles/nav.css');
+            if (!userModulePromise) {
+                userModulePromise = import('./app-user.js');
+            }
+            import('../pages/account.js?v=' + (window.GY_WEB_STATIC_VERSION || '1')).catch(() => {});
+            return userModulePromise;
+        };
+        btn.addEventListener('pointerenter', preloadUserModule, { passive: true });
+        btn.addEventListener('focus', preloadUserModule);
+        btn.addEventListener('click', async (e) => {
             e.stopPropagation();
-            const { handleUserClick } = await import('./app-user.js');
+            const { handleUserClick } = await preloadUserModule();
             handleUserClick(this, e);
+        });
+    }
+
+    setupNotificationBadge() {
+        initAuth().catch(() => {});
+        effect(() => {
+            const currentUser = user.value;
+            if (currentUser) {
+                loadNotifications().catch(() => {});
+                fetchNotificationPreferences().catch(() => {});
+                startNotificationPolling();
+            } else {
+                notificationSummary.value = { items: [], unreadCount: 0, loaded: false, loading: false, error: null };
+            }
+        });
+        effect(() => {
+            const btn = this.querySelector('#user-btn');
+            const libraryTab = this.querySelector('#bottom-nav .bottom-tab[data-route="account"]');
+            if (!btn && !libraryTab) return;
+            const count = Number(notificationSummary.value.unreadCount || 0);
+            const label = count > 99 ? '99+' : String(count);
+            updateBadge(btn, {
+                count,
+                label,
+                className: 'nav-btn-badge',
+                emptyAria: '用户菜单',
+                aria: `用户菜单，${label} 条未读消息`,
+            });
+            updateBadge(libraryTab, {
+                count,
+                label,
+                className: 'bottom-tab-badge',
+                emptyAria: '我的',
+                aria: `我的，${label} 条未读消息`,
+            });
         });
     }
 
@@ -124,6 +185,23 @@ class AppShell extends HTMLElement {
             app.scrollTo({ top: 0, behavior: 'smooth' });
         });
     }
+}
+
+function updateBadge(target, options) {
+    if (!target) return;
+    let badge = target.querySelector(`.${options.className}`);
+    if (options.count <= 0) {
+        badge?.remove();
+        target.setAttribute('aria-label', options.emptyAria);
+        return;
+    }
+    if (!badge) {
+        badge = document.createElement('span');
+        badge.className = options.className;
+        target.appendChild(badge);
+    }
+    badge.textContent = options.label;
+    target.setAttribute('aria-label', options.aria);
 }
 
 customElements.define('app-shell', AppShell);

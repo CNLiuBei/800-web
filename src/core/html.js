@@ -55,16 +55,18 @@ export function renderList(container, items, keyFn, renderFn) {
 }
 
 // 按需加载 CSS（幂等，同一文件只加载一次）
-// 用于把非首屏样式（如 detail/vip）从首屏阻塞中移出，进对应页面时再加载
+import { webStaticUrl } from '../services/config.js';
+
 const loadedCSS = new Set();
 
 export function loadCSS(href) {
-    if (loadedCSS.has(href)) return Promise.resolve();
-    loadedCSS.add(href);
+    const url = webStaticUrl(href);
+    if (loadedCSS.has(url)) return Promise.resolve();
+    loadedCSS.add(url);
     return new Promise((resolve) => {
         const link = document.createElement('link');
         link.rel = 'stylesheet';
-        link.href = href;
+        link.href = url;
         link.onload = () => resolve();
         link.onerror = () => resolve(); // 失败也放行，不阻塞渲染
         document.head.appendChild(link);

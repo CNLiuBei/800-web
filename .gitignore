@@ -1,0 +1,6 @@
+.playwright-cli/
+.dryrun/
+.cdn-publish-manifest.json
+node_modules/
+.wrangler/
+.dev.vars

@@ -1,0 +1,702 @@
+/* 个人中心布局：侧栏导航 + 右侧详情 */
+
+.gy-account {
+    --gy-acc-bg: #f5f5f7;
+    --gy-acc-surface: #ffffff;
+    --gy-acc-line: #d2d2d7;
+    --gy-acc-line-soft: #e8e8ed;
+    --gy-acc-text: #1d1d1f;
+    --gy-acc-muted: #6e6e73;
+    --gy-acc-nav-active: #e8e8ed;
+    --gy-acc-nav-hover: #f5f5f7;
+    --gy-acc-link: #0066cc;
+    --gy-acc-max: 68rem;
+    --gy-acc-sidebar: 15.5rem;
+    color: var(--gy-acc-text);
+    background: var(--gy-acc-bg);
+    min-height: calc(100vh - var(--nav-height) - var(--safe-top));
+    margin: 0 -0.85rem;
+}
+
+[data-theme="dark"] .gy-account {
+    --gy-acc-bg: #000000;
+    --gy-acc-surface: #1c1c1e;
+    --gy-acc-line: #38383a;
+    --gy-acc-line-soft: #2c2c2e;
+    --gy-acc-text: #f5f5f7;
+    --gy-acc-muted: #98989d;
+    --gy-acc-nav-active: #2c2c2e;
+    --gy-acc-nav-hover: #1c1c1e;
+    --gy-acc-link: #2997ff;
+}
+
+.gy-account-demo-note {
+    max-width: var(--gy-acc-max);
+    margin: 0 auto;
+    padding: 0.65rem 1.25rem 0;
+    color: var(--gy-acc-muted);
+    font-size: 0.72rem;
+    line-height: 1.45;
+}
+
+.gy-account-demo-note a {
+    color: var(--gy-acc-link);
+}
+
+.gy-account-frame {
+    max-width: var(--gy-acc-max);
+    margin: 0 auto;
+    padding: 1.5rem 1.25rem 2.5rem;
+    display: grid;
+    grid-template-columns: var(--gy-acc-sidebar) minmax(0, 1fr);
+    gap: 0;
+    align-items: start;
+}
+
+.gy-account-sidebar {
+    position: sticky;
+    top: calc(var(--nav-height) + var(--safe-top) + 0.5rem);
+    padding-right: 1.5rem;
+}
+
+.gy-account-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 1.25rem;
+}
+
+.gy-account-profile-copy {
+    min-width: 0;
+    display: grid;
+    gap: 0.2rem;
+}
+
+.gy-account-avatar {
+    width: 4.5rem;
+    height: 4.5rem;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 50%;
+    background: var(--gy-acc-line-soft);
+    color: var(--gy-acc-muted);
+    font-size: 1.65rem;
+    font-weight: 600;
+}
+
+.gy-account-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.gy-account-profile-name {
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.gy-account-profile-email {
+    color: var(--gy-acc-muted);
+    font-size: 0.78rem;
+    line-height: 1.35;
+}
+
+.gy-account-nav {
+    display: grid;
+    gap: 0.15rem;
+}
+
+.gy-account-nav-item {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.55rem;
+    width: 100%;
+    min-height: 2.25rem;
+    padding: 0.35rem 0.65rem;
+    border: 0;
+    border-radius: 0.45rem;
+    background: transparent;
+    color: var(--gy-acc-text);
+    font-size: 0.82rem;
+    font-weight: 400;
+    text-align: left;
+    cursor: pointer;
+    transition: background 120ms ease;
+}
+
+.gy-account-nav-leading {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+}
+
+.gy-account-nav-chevron {
+    display: none;
+    flex: 0 0 auto;
+    margin-left: auto;
+    color: var(--gy-acc-muted);
+    opacity: 0.55;
+}
+
+.gy-account-nav-item:hover {
+    background: var(--gy-acc-nav-hover);
+}
+
+.gy-account-nav-item.is-active {
+    background: var(--gy-acc-nav-active);
+    font-weight: 600;
+}
+
+.gy-account-nav-icon {
+    width: 1.15rem;
+    height: 1.15rem;
+    flex: 0 0 auto;
+    display: inline-flex;
+    color: var(--gy-acc-muted);
+}
+
+.gy-account-nav-item.is-active .gy-account-nav-icon {
+    color: var(--gy-acc-text);
+}
+
+.gy-account-nav-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.gy-account-main {
+    min-width: 0;
+    padding-left: 2rem;
+    border-left: 1px solid var(--gy-acc-line);
+}
+
+.gy-account-section {
+    display: none;
+    animation: gy-acc-fade-in 220ms ease;
+}
+
+@keyframes gy-acc-fade-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .gy-account-section { animation: none; }
+}
+
+.gy-account-section.is-active {
+    display: block;
+}
+
+/* ── 右侧 Hero ── */
+
+.gy-account-hero {
+    margin-bottom: 1.75rem;
+}
+
+.gy-account-kicker {
+    color: var(--gy-acc-muted);
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+}
+
+.gy-account-heading {
+    margin-top: 0.35rem;
+    font-size: clamp(1.85rem, 4vw, 2.35rem);
+    line-height: 1.08;
+    font-weight: 700;
+    letter-spacing: -0.035em;
+}
+
+.gy-account-lead {
+    margin-top: 0.65rem;
+    max-width: 34rem;
+    color: var(--gy-acc-muted);
+    font-size: 0.94rem;
+    line-height: 1.55;
+    font-weight: 400;
+}
+
+/* ── 状态摘要条 ── */
+
+.gy-account-summary {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 1.75rem;
+    padding: 1rem 1.05rem;
+    border-radius: 1rem;
+    background: var(--gy-acc-surface);
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.04),
+        0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="dark"] .gy-account-summary {
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.35),
+        0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.gy-account-summary-dot {
+    width: 0.55rem;
+    height: 0.55rem;
+    margin-top: 0.35rem;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: #30d158;
+}
+
+.gy-account-summary.is-warn .gy-account-summary-dot {
+    background: #ff9f0a;
+}
+
+.gy-account-summary.is-ok .gy-account-summary-dot {
+    background: #30d158;
+}
+
+.gy-account-summary-copy {
+    min-width: 0;
+    display: grid;
+    gap: 0.2rem;
+}
+
+.gy-account-summary-copy strong {
+    font-size: 0.92rem;
+    font-weight: 650;
+    line-height: 1.3;
+}
+
+.gy-account-summary-copy span {
+    color: var(--gy-acc-muted);
+    font-size: 0.82rem;
+    line-height: 1.45;
+}
+
+/* ── 分组与卡片栈 ── */
+
+.gy-account-block {
+    margin-top: 2rem;
+}
+
+.gy-account-block:first-of-type {
+    margin-top: 0;
+}
+
+.gy-account-block-title {
+    margin-bottom: 0.35rem;
+    font-size: 1.05rem;
+    font-weight: 650;
+    letter-spacing: -0.015em;
+}
+
+.gy-account-block-intro {
+    margin-bottom: 0.85rem;
+    max-width: 34rem;
+    color: var(--gy-acc-muted);
+    font-size: 0.82rem;
+    line-height: 1.5;
+}
+
+.gy-account-stack {
+    display: grid;
+    gap: 0.65rem;
+}
+
+.gy-account-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    width: 100%;
+    min-height: 4.25rem;
+    padding: 0.95rem 1.05rem;
+    border: 0;
+    border-radius: 1rem;
+    background: var(--gy-acc-surface);
+    color: inherit;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.04),
+        0 6px 20px rgba(0, 0, 0, 0.05);
+    transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+[data-theme="dark"] .gy-account-card {
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.35),
+        0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.gy-account-card:hover {
+    transform: translateY(-1px);
+    box-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.06),
+        0 10px 28px rgba(0, 0, 0, 0.08);
+}
+
+.gy-account-card.is-static {
+    cursor: default;
+}
+
+.gy-account-card.is-static:hover {
+    transform: none;
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.04),
+        0 6px 20px rgba(0, 0, 0, 0.05);
+}
+
+.gy-account-card-main {
+    min-width: 0;
+    flex: 1 1 auto;
+    display: grid;
+    gap: 0.22rem;
+}
+
+.gy-account-card-label {
+    font-size: 0.94rem;
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+}
+
+.gy-account-card-hint {
+    color: var(--gy-acc-muted);
+    font-size: 0.78rem;
+    line-height: 1.35;
+}
+
+.gy-account-card-end {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.45rem;
+    max-width: 52%;
+}
+
+.gy-account-card-value {
+    color: var(--gy-acc-muted);
+    font-size: 0.86rem;
+    font-weight: 500;
+    line-height: 1.25;
+    text-align: right;
+}
+
+.gy-account-status {
+    flex: 0 0 auto;
+    min-height: 1.35rem;
+    padding: 0.12rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 650;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.gy-account-status.is-ok {
+    background: rgba(48, 209, 88, 0.12);
+    color: #248a3d;
+}
+
+.gy-account-status.is-warn {
+    background: rgba(255, 159, 10, 0.14);
+    color: #c93400;
+}
+
+.gy-account-status.is-muted {
+    background: var(--gy-acc-nav-active);
+    color: var(--gy-acc-muted);
+}
+
+[data-theme="dark"] .gy-account-status.is-ok {
+    color: #30d158;
+}
+
+[data-theme="dark"] .gy-account-status.is-warn {
+    color: #ff9f0a;
+}
+
+.gy-account-chevron-svg {
+    flex: 0 0 auto;
+    color: var(--gy-acc-muted);
+    opacity: 0.55;
+}
+
+.gy-account-footnote {
+    margin-top: 1.25rem;
+    color: var(--gy-acc-muted);
+    font-size: 0.8rem;
+    line-height: 1.55;
+}
+
+.gy-account-footnote a {
+    color: var(--gy-acc-link);
+}
+
+.gy-account-mobile-back {
+    display: none;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0 0 1rem;
+    padding: 0.15rem 0;
+    border: 0;
+    background: transparent;
+    color: var(--gy-acc-link);
+    font-size: 0.92rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.gy-account-mobile-back svg {
+    flex: 0 0 auto;
+}
+
+/* 站内路由：为底部 Tab 留空 */
+body:not(.gy-account-standalone) .gy-account {
+    padding-bottom: calc(3.5rem + var(--safe-bottom));
+}
+
+body.gy-account-standalone .gy-account {
+    padding-bottom: var(--safe-bottom);
+}
+
+body.gy-account-standalone {
+    overflow: auto;
+    background: var(--gy-acc-bg, #f5f5f7);
+}
+
+body.gy-account-standalone .gy-account {
+    margin: 0;
+    min-height: 100vh;
+}
+
+body.gy-account-standalone .gy-account-sidebar {
+    top: 0.5rem;
+}
+
+@media (max-width: 820px) {
+    .gy-account {
+        margin: 0 -0.85rem;
+        min-height: calc(100dvh - var(--nav-height) - var(--safe-top));
+    }
+
+    body.gy-account-standalone .gy-account {
+        min-height: 100dvh;
+    }
+
+    .gy-account-demo-note {
+        display: none;
+    }
+
+    .gy-account-frame {
+        grid-template-columns: 1fr;
+        gap: 0;
+        padding: 0.85rem 1rem calc(1.5rem + var(--safe-bottom));
+    }
+
+    /* 移动端：默认只显示菜单 */
+    .gy-account:not(.is-mobile-detail) .gy-account-main {
+        display: none;
+    }
+
+    .gy-account.is-mobile-detail .gy-account-sidebar {
+        display: none;
+    }
+
+    .gy-account.is-mobile-detail .gy-account-mobile-back {
+        display: inline-flex;
+        min-height: 2.75rem;
+    }
+
+    .gy-account-sidebar {
+        position: static;
+        padding-right: 0;
+        border-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .gy-account-profile {
+        margin-bottom: 1rem;
+        padding: 0.15rem 0.1rem 0.85rem;
+        border-bottom: 1px solid var(--gy-acc-line-soft);
+    }
+
+    .gy-account-avatar {
+        width: 3.75rem;
+        height: 3.75rem;
+        font-size: 1.35rem;
+    }
+
+    .gy-account-profile-name {
+        font-size: 1.08rem;
+    }
+
+    .gy-account-nav {
+        display: grid;
+        gap: 0;
+        border-radius: 1rem;
+        overflow: hidden;
+        background: var(--gy-acc-surface);
+        box-shadow:
+            0 1px 2px rgba(0, 0, 0, 0.04),
+            0 6px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    [data-theme="dark"] .gy-account-nav {
+        box-shadow:
+            0 1px 2px rgba(0, 0, 0, 0.35),
+            0 6px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .gy-account-nav-item {
+        justify-content: space-between;
+        min-height: 3.25rem;
+        padding: 0.75rem 1rem;
+        border-radius: 0;
+        border-top: 1px solid var(--gy-acc-line-soft);
+    }
+
+    .gy-account-nav-item:first-child {
+        border-top: 0;
+    }
+
+    .gy-account-nav-item.is-active {
+        background: transparent;
+        font-weight: 500;
+    }
+
+    .gy-account-nav-chevron {
+        display: block;
+    }
+
+    .gy-account-main {
+        padding-left: 0;
+        border-left: 0;
+    }
+
+    .gy-account-hero {
+        margin-bottom: 1.25rem;
+    }
+
+    .gy-account-heading {
+        font-size: 1.55rem;
+    }
+
+    .gy-account-lead {
+        font-size: 0.88rem;
+    }
+
+    .gy-account-summary {
+        margin-bottom: 1.25rem;
+        padding: 0.9rem 1rem;
+    }
+
+    .gy-account-block {
+        margin-top: 1.5rem;
+    }
+
+    .gy-account-card {
+        min-height: 3.75rem;
+        padding: 0.85rem 0.95rem;
+        border-radius: 0.85rem;
+    }
+
+    .gy-account-card-end {
+        max-width: 48%;
+    }
+}
+
+@media (max-width: 820px) and (hover: none) {
+    .gy-account-card:hover {
+        transform: none;
+    }
+}
+
+@media (max-width: 420px) {
+    .gy-account-card {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.55rem;
+    }
+
+    .gy-account-card-end {
+        max-width: none;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .gy-account-card-value {
+        text-align: left;
+    }
+}
+
+/* 头像与侧栏补充 */
+.gy-account-profile-meta {
+    color: var(--gy-acc-muted);
+    font-size: 0.74rem;
+    line-height: 1.35;
+}
+
+.gy-account-nav-badge {
+    min-width: 1.1rem;
+    min-height: 1.1rem;
+    padding: 0 0.3rem;
+    margin-left: 0.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: var(--gy-acc-text);
+    color: var(--gy-acc-surface);
+    font-size: 0.62rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+/* 正式内容区：嵌入旧 account 面板 */
+.gy-account-main .account-panel-host {
+    min-width: 0;
+}
+
+.gy-account-main .account-section-top {
+    display: none;
+}
+
+.gy-account-main .account-section-page,
+.gy-account-main .account-hub {
+    gap: 0.85rem;
+}
+
+.gy-account-main .account-card,
+.gy-account-main .account-hub-resume,
+.gy-account-main .account-settings-stack .account-card {
+    border: 0;
+    border-radius: 1rem;
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.04),
+        0 6px 20px rgba(0, 0, 0, 0.05);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+[data-theme="dark"] .gy-account-main .account-card,
+[data-theme="dark"] .gy-account-main .account-hub-resume {
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.35),
+        0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.gy-account-main .account-guest-page {
+    min-height: auto;
+    padding: 1rem 0 2rem;
+}

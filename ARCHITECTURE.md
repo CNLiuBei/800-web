@@ -61,8 +61,8 @@ frontend/web/
         └── vip.js          # VIP/订单状态
 ```
 
-播放器源码在独立仓库 `800-player` 维护。主站播放页运行时加载同域线上产物：
-`/player/gy-player.js`。以后改播放器只改 `800-player`，`800-web` 不再保存播放器拷贝。
+播放器源码在 `packages/gy-player/`。主站从 CDN 加载：
+`https://cdn.guangying.org/static/player/gy-player.js`。
 
 ---
 

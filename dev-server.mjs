@@ -8,6 +8,8 @@
 //   - 仅开发用，不修改任何业务代码（reload 脚本运行时注入）
 //
 // 用法：node dev-server.mjs  （默认端口 5173）
+// API 代理：默认转发到线上 guangying.org；本地 Worker 可用
+//   API_PROXY=http://127.0.0.1:8787 node dev-server.mjs
 
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
@@ -17,6 +19,13 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('.', import.meta.url));
 const PORT = Number(process.env.PORT) || 5173;
+const API_PROXY_ORIGIN = (process.env.API_PROXY || process.env.API_PROXY_ORIGIN || 'https://guangying.org')
+    .replace(/\/+$/, '');
+
+const HOP_BY_HOP = new Set([
+    'connection', 'keep-alive', 'proxy-authenticate', 'proxy-authorization',
+    'te', 'trailers', 'transfer-encoding', 'upgrade',
+]);
 
 const MIME = {
     '.html': 'text/html; charset=utf-8',
@@ -78,19 +87,31 @@ const RELOAD_SNIPPET = `
 const SW_KILL_SNIPPET = `
 <script>
 (() => {
+  try { localStorage.removeItem('gy_api_origin'); } catch {}
+  window.GY_CONFIG = Object.assign({}, window.GY_CONFIG || {}, { apiOrigin: '' });
   if (!('serviceWorker' in navigator)) return;
-  // 标记位：避免无限刷新循环
-  if (sessionStorage.getItem('__sw_killed')) return;
+  navigator.serviceWorker.register = function registerDisabled() {
+    console.log('[dev] Service Worker 已禁用');
+    return Promise.resolve({
+      installing: null,
+      waiting: null,
+      active: null,
+      addEventListener() {},
+      unregister: async () => true,
+    });
+  };
+  const hadController = !!navigator.serviceWorker.controller;
   navigator.serviceWorker.getRegistrations().then(async (rs) => {
-    if (rs.length === 0) return;
-    await Promise.all(rs.map(r => r.unregister()));
+    if (rs.length) await Promise.all(rs.map((r) => r.unregister()));
     if ('caches' in window) {
       const keys = await caches.keys();
-      await Promise.all(keys.map(k => caches.delete(k)));
+      await Promise.all(keys.map((k) => caches.delete(k)));
     }
-    sessionStorage.setItem('__sw_killed', '1'); // 只自愈刷新一次
-    console.log('[dev] 已注销旧 Service Worker 并清理缓存，刷新中...');
-    location.reload();
+    if (hadController && !sessionStorage.getItem('__sw_killed')) {
+      sessionStorage.setItem('__sw_killed', '1');
+      console.log('[dev] 已注销旧 Service Worker，刷新中...');
+      location.reload();
+    }
   });
 })();
 </script>
@@ -121,6 +142,57 @@ function scheduleReload(filename) {
     }, 150);
 }
 
+function readRequestBody(req) {
+    return new Promise((resolve, reject) => {
+        const chunks = [];
+        req.on('data', (chunk) => chunks.push(chunk));
+        req.on('end', () => resolve(Buffer.concat(chunks)));
+        req.on('error', reject);
+    });
+}
+
+async function proxyApi(req, res, urlPath, search) {
+    const target = new URL(`${urlPath}${search}`, `${API_PROXY_ORIGIN}/`);
+    const headers = { ...req.headers, host: target.host };
+    delete headers['accept-encoding']; // 避免压缩体在开发代理里难排查
+
+    const init = { method: req.method, headers, redirect: 'manual' };
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+        init.body = await readRequestBody(req);
+    }
+
+    let upstream;
+    try {
+        upstream = await fetch(target, init);
+    } catch (err) {
+        res.writeHead(502, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end(`API 代理失败 (${API_PROXY_ORIGIN}): ${err.message}`);
+        return;
+    }
+
+    const outHeaders = {};
+    upstream.headers.forEach((value, key) => {
+        const lower = key.toLowerCase();
+        if (HOP_BY_HOP.has(lower)) return;
+        // 让 cookie 落在 localhost，便于本地登录联调
+        if (lower === 'set-cookie') {
+            outHeaders[key] = value
+                .replace(/;\s*Domain=[^;]+/gi, '')
+                .replace(/;\s*Secure/gi, '');
+            return;
+        }
+        outHeaders[key] = value;
+    });
+
+    res.writeHead(upstream.status, outHeaders);
+    if (upstream.body) {
+        const body = Buffer.from(await upstream.arrayBuffer());
+        res.end(body);
+    } else {
+        res.end();
+    }
+}
+
 // 递归监听目录变化
 function watchDir(dir) {
     try {
@@ -135,7 +207,34 @@ function watchDir(dir) {
 }
 
 const server = createServer(async (req, res) => {
-    const urlPath = decodeURIComponent(req.url.split('?')[0]);
+    const [rawPath, search = ''] = req.url.split('?');
+    const urlPath = decodeURIComponent(rawPath);
+    const query = search ? `?${search}` : '';
+
+    // API 反向代理（避免 /api 被 SPA 兜底成 index.html）
+    if (urlPath === '/api' || urlPath.startsWith('/api/')) {
+        await proxyApi(req, res, urlPath, query);
+        return;
+    }
+
+    // 开发模式：用自毁 SW 替换生产 sw.js，防止缓存旧 API
+    if (urlPath === '/sw.js') {
+        res.writeHead(200, {
+            'Content-Type': 'text/javascript; charset=utf-8',
+            'Cache-Control': 'no-store',
+        });
+        res.end(`self.addEventListener('install',()=>self.skipWaiting());
+self.addEventListener('activate',(e)=>e.waitUntil((async()=>{
+  const keys=await caches.keys();
+  await Promise.all(keys.map((k)=>caches.delete(k)));
+  await self.registration.unregister();
+  const clients=await self.clients.matchAll({type:'window'});
+  clients.forEach((c)=>c.navigate(c.url));
+})()));`);
+        return;
+    }
+
+    // 播放器与 Shaka 仅走 CDN（cdn.guangying.org），见 player-module.js
 
     // SSE 端点
     if (urlPath === '/__livereload') {
@@ -200,6 +299,8 @@ watch(join(ROOT, 'index.html'), () => scheduleReload('index.html'));
 server.listen(PORT, () => {
     console.log(`\n\x1b[32m✓ 开发服务器已启动\x1b[0m`);
     console.log(`  本地访问: \x1b[36mhttp://localhost:${PORT}\x1b[0m`);
+    console.log(`  API 代理: \x1b[36m${API_PROXY_ORIGIN}\x1b[0m`);
+    console.log(`  播放器: CDN manifest → cdn.guangying.org/static/player/`);
     console.log(`  热更新: CSS 热替换，JS/HTML 自动刷新`);
     console.log(`  按 Ctrl+C 停止\n`);
 });

@@ -1,0 +1,357 @@
+.shorts-page {
+    min-height: calc(100dvh - var(--nav-height) - var(--safe-top));
+    margin: calc(-1 * (var(--nav-height) + 1.5rem + var(--safe-top))) auto 0;
+    background:
+        radial-gradient(circle at 18% 8%, rgba(10, 132, 255, 0.28), transparent 28rem),
+        radial-gradient(circle at 82% 18%, rgba(255, 45, 85, 0.2), transparent 24rem),
+        #050507;
+    color: #fff;
+}
+
+.shorts-topbar {
+    position: fixed;
+    top: calc(var(--safe-top) + 4.3rem);
+    left: 50%;
+    z-index: 20;
+    display: flex;
+    width: min(30rem, calc(100vw - 1.5rem));
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    transform: translateX(-50%);
+    pointer-events: none;
+}
+
+.shorts-topbar h1 {
+    margin: 0;
+    font-size: 1.45rem;
+    letter-spacing: -0.04em;
+    text-shadow: var(--text-on-image);
+}
+
+.shorts-kicker {
+    display: block;
+    margin-bottom: 0.12rem;
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 0.72rem;
+    font-weight: 850;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+.shorts-refresh {
+    min-height: 2.25rem;
+    padding: 0 0.9rem;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    font: inherit;
+    font-weight: 850;
+    pointer-events: auto;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+.shorts-feed {
+    height: 100dvh;
+    overflow-y: auto;
+    scroll-snap-type: y mandatory;
+    scrollbar-width: none;
+}
+
+.shorts-feed::-webkit-scrollbar {
+    display: none;
+}
+
+.short-card {
+    position: relative;
+    display: grid;
+    height: 100dvh;
+    min-height: 38rem;
+    place-items: center;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    overflow: hidden;
+}
+
+.short-card.is-muted .short-media {
+    filter: saturate(0.45) brightness(0.72);
+}
+
+.short-media {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+}
+
+.short-media video,
+.short-placeholder img {
+    width: min(100vw, 30rem);
+    height: min(100dvh, 54rem);
+    max-height: 100dvh;
+    object-fit: cover;
+    border-radius: clamp(0rem, 1.8vw, 1.8rem);
+    background: #111;
+    box-shadow: 0 1.2rem 4rem rgba(0, 0, 0, 0.42);
+}
+
+.short-placeholder {
+    display: grid;
+    width: min(100vw, 30rem);
+    height: min(100dvh, 54rem);
+    place-items: center;
+    border-radius: clamp(0rem, 1.8vw, 1.8rem);
+    background: linear-gradient(145deg, #15151d, #08080c);
+    color: rgba(255, 255, 255, 0.62);
+    font-weight: 800;
+}
+
+.short-gradient {
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(to top, rgba(0, 0, 0, 0.82), transparent 46%),
+        linear-gradient(to right, rgba(0, 0, 0, 0.52), transparent 42%);
+    pointer-events: none;
+}
+
+.short-copy {
+    position: absolute;
+    left: max(1.25rem, calc((100vw - 30rem) / 2 + 1.25rem));
+    right: max(5.4rem, calc((100vw - 30rem) / 2 + 5.4rem));
+    bottom: max(5.4rem, calc(var(--safe-bottom) + 4.2rem));
+    z-index: 2;
+    text-shadow: var(--text-on-image);
+}
+
+.short-copy h2 {
+    margin: 0.35rem 0 0.5rem;
+    font-size: clamp(1.35rem, 5vw, 2.25rem);
+    line-height: 1.08;
+    letter-spacing: -0.05em;
+}
+
+.short-copy p {
+    display: -webkit-box;
+    max-width: 32rem;
+    margin: 0 0 0.75rem;
+    overflow: hidden;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 0.95rem;
+    line-height: 1.55;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.short-reason,
+.short-channel {
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 0.84rem;
+    font-weight: 850;
+    text-decoration: none;
+}
+
+.short-actions {
+    position: absolute;
+    right: max(1rem, calc((100vw - 30rem) / 2 + 1rem));
+    bottom: max(6rem, calc(var(--safe-bottom) + 4.8rem));
+    z-index: 3;
+    display: grid;
+    gap: 0.65rem;
+}
+
+.short-actions button,
+.short-actions a,
+.shorts-empty a {
+    display: inline-flex;
+    min-width: 3.4rem;
+    min-height: 3.4rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 900;
+    text-decoration: none;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+}
+
+.short-actions button.active {
+    border-color: rgba(255, 255, 255, 0.36);
+    background: rgba(255, 255, 255, 0.28);
+    box-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.22);
+}
+
+.short-actions [data-short-action="like"].active {
+    background: rgba(255, 45, 85, 0.82);
+}
+
+.short-actions [data-short-action="comments"].active {
+    background: rgba(10, 132, 255, 0.82);
+}
+
+.short-actions [data-short-action="not-interested"] {
+    min-width: 4.6rem;
+    padding: 0 0.7rem;
+    border-radius: 1.15rem;
+}
+
+.short-comments-panel {
+    position: absolute;
+    right: max(5.1rem, calc((100vw - 30rem) / 2 + 5.1rem));
+    bottom: max(4.5rem, calc(var(--safe-bottom) + 3.6rem));
+    z-index: 4;
+    width: min(27rem, calc(100vw - 7rem));
+    max-height: min(70dvh, 42rem);
+    overflow: auto;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 1.4rem;
+    background: rgba(7, 7, 10, 0.78);
+    box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.42);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+}
+
+.short-comments-panel.hidden {
+    display: none;
+}
+
+.short-comments-panel .comments-section {
+    max-width: none;
+    margin: 0;
+    padding: 1rem;
+    color: #fff;
+}
+
+.short-comments-panel .comments-head {
+    align-items: flex-start;
+}
+
+.short-comments-panel .comments-title {
+    color: #fff;
+}
+
+.short-comments-panel .comment-compose-card {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.14);
+}
+
+.short-comments-panel .comment-input,
+.short-comments-panel .comment-guidelines,
+.short-comments-panel .comment-item {
+    background: transparent;
+}
+
+.short-comments-panel .comment-guidelines {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.short-comments-panel .comment-guest-bar {
+    background: rgba(10, 132, 255, 0.12);
+}
+
+.short-comments-panel .comment-guidelines-summary::after {
+    border-color: rgba(255, 255, 255, 0.55);
+}
+
+.short-comments-panel .comment-guidelines-teaser,
+.short-comments-panel .comment-guest-text,
+.short-comments-panel .comment-guidelines-text {
+    color: rgba(255, 255, 255, 0.72);
+}
+
+.short-comments-panel .comment-text,
+.short-comments-panel .comment-name {
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.short-comments-panel .comment-hint,
+.short-comments-panel .comments-count,
+.short-comments-panel .comment-time,
+.short-comments-panel .comment-guidelines-text {
+    color: rgba(255, 255, 255, 0.62);
+}
+
+.shorts-loading,
+.shorts-error,
+.shorts-empty {
+    display: grid;
+    min-height: 100dvh;
+    place-items: center;
+    align-content: center;
+    gap: 0.75rem;
+    padding: 2rem;
+    text-align: center;
+    scroll-snap-align: start;
+}
+
+.shorts-error span,
+.shorts-empty span {
+    max-width: 24rem;
+    color: rgba(255, 255, 255, 0.62);
+}
+
+@media (max-width: 640px) {
+    .shorts-page {
+        margin-top: calc(-1 * (var(--nav-height) + 1.5rem + var(--safe-top)));
+    }
+
+    .shorts-topbar {
+        top: calc(var(--safe-top) + 3.8rem);
+    }
+
+    .short-card {
+        min-height: 100dvh;
+    }
+
+    .short-media video,
+    .short-placeholder,
+    .short-placeholder img {
+        width: 100vw;
+        height: 100dvh;
+        border-radius: 0;
+    }
+
+    .short-copy {
+        left: 1rem;
+        right: 5.35rem;
+    }
+
+    .short-actions {
+        right: 0.85rem;
+    }
+
+    .short-comments-panel {
+        right: 0.85rem;
+        bottom: max(4.25rem, calc(var(--safe-bottom) + 3.4rem));
+        width: min(26rem, calc(100vw - 1.7rem));
+        max-height: 62dvh;
+    }
+
+    .short-comments-panel .comments-section {
+        padding: 0.85rem;
+    }
+
+    .short-comments-panel .comments-head {
+        gap: 0.55rem;
+        margin-bottom: 0.65rem;
+    }
+
+    .short-comments-panel .comment-input {
+        font-size: 1rem;
+        min-height: 3rem;
+    }
+
+    .short-comments-panel .comment-submit,
+    .short-comments-panel .comment-login-btn,
+    .short-comments-panel .comments-sort-btn,
+    .short-comments-panel .comments-refresh {
+        min-height: 2.75rem;
+    }
+}

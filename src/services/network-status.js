@@ -1,44 +1,85 @@
-// 网络状态提示：断网时显示横幅，恢复时自动消失
-// 仅做轻量提示，不拦截操作（缓存数据仍可浏览）
+// 网络状态提示：断网时说明可用能力，恢复后自动重试错误页
 
-let bannerEl = null;
+import { dismissSiteNotice, showSiteNotice } from './site-notice.js';
+
+const OFFLINE_NOTICE_ID = 'network-offline';
+let initialized = false;
+let dismissedWhileOffline = false;
 
 function showOfflineBanner() {
-    if (bannerEl) return;
-    bannerEl = document.createElement('div');
-    bannerEl.id = 'offline-banner';
-    bannerEl.className = 'offline-banner';
-    bannerEl.setAttribute('role', 'status');
-    bannerEl.innerHTML = `
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M10.71 5.05A16 16 0 0 1 22.58 9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
-        <span>网络已断开，部分内容可能无法加载</span>
-    `;
-    document.body.appendChild(bannerEl);
+    if (dismissedWhileOffline) return;
+    showSiteNotice('', {
+        id: OFFLINE_NOTICE_ID,
+        tone: 'offline',
+        persistent: true,
+        dismissible: true,
+        title: '网络已断开',
+        subtitle: '可继续浏览已缓存内容；播放、搜索和会员订单可能无法刷新。',
+        onDismiss: () => {
+            dismissedWhileOffline = true;
+        },
+        actions: [
+            {
+                key: 'retry',
+                label: '重试当前页',
+                primary: true,
+                keepOpen: true,
+                onClick: () => retryCurrentRoute(),
+            },
+            {
+                key: 'dismiss',
+                label: '收起',
+                dismiss: true,
+                onClick: () => {
+                    dismissedWhileOffline = true;
+                },
+            },
+        ],
+    });
 }
 
 function hideOfflineBanner() {
-    bannerEl?.remove();
-    bannerEl = null;
+    dismissSiteNotice(OFFLINE_NOTICE_ID);
 }
 
-// 网络恢复后，若当前停留在路由错误页/空状态，自动重试当前路由
+function showOnlineToast() {
+    dismissedWhileOffline = false;
+    hideOfflineBanner();
+    showSiteNotice('', {
+        id: 'network-online',
+        tone: 'online',
+        duration: 2600,
+        title: '网络已恢复',
+        subtitle: '正在同步当前页面内容',
+    });
+}
+
+async function retryCurrentRoute() {
+    try {
+        const { reloadRoute } = await import('../core/router.js');
+        reloadRoute();
+    } catch {}
+}
+
+// 网络恢复后，若当前停留在路由错误页/页面错误状态，自动重试当前路由
 async function retryIfErrorPage() {
     const app = document.getElementById('app');
     if (!app) return;
     if (app.querySelector('.route-error') || app.querySelector('.page-error')) {
-        try {
-            const { reloadRoute } = await import('../core/router.js');
-            reloadRoute();
-        } catch {}
+        await retryCurrentRoute();
     }
 }
 
 export function initNetworkStatus() {
-    window.addEventListener('offline', showOfflineBanner);
-    window.addEventListener('online', () => {
-        hideOfflineBanner();
-        retryIfErrorPage();
+    if (initialized) {
+        if (navigator.onLine === false) showOfflineBanner();
+        return;
+    }
+    initialized = true;
+    window.addEventListener('online', async () => {
+        showOnlineToast();
+        await retryIfErrorPage();
     });
-    // 初始即离线则立即提示
+    window.addEventListener('offline', () => showOfflineBanner());
     if (navigator.onLine === false) showOfflineBanner();
 }

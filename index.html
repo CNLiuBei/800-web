@@ -1,1 +1,61 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content"><meta name="theme-color" content="#fff"><meta name="theme-color" content="#000" media="(prefers-color-scheme:dark)"><title>800影视</title><meta name="description" content="免费在线观看高清电影、电视剧、动漫。"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/icons/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/styles/critical.css"><link rel="preconnect" href="https://hono.guangying.org"></head><body><app-shell></app-shell><script type="module" src="/src/main.js"></script></body></html>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<meta name="theme-color" content="#fff">
+<meta name="theme-color" content="#000" media="(prefers-color-scheme: dark)">
+<title>800影视</title>
+<meta name="description" content="免费在线观看高清电影、电视剧、动漫。">
+<link rel="canonical" href="/">
+<meta property="og:site_name" content="800影视">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:title" content="800影视">
+<meta property="og:description" content="免费在线观看高清电影、电视剧、动漫。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="/">
+<meta property="og:image" content="https://guangying.org/icons/icon-512.png?v=1ec73da94a23">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="800影视">
+<meta name="twitter:description" content="免费在线观看高清电影、电视剧、动漫。">
+<meta name="twitter:image" content="https://guangying.org/icons/icon-512.png?v=1ec73da94a23">
+<link rel="manifest" href="/manifest.json">
+<link rel="preconnect" href="https://cdn.guangying.org" crossorigin>
+<script>
+window.GY_WEB_STATIC_VERSION = '1ec73da94a23';
+(function () {
+    var version = window.GY_WEB_STATIC_VERSION;
+    window.__gyAsset = function (path) {
+        return path + '?v=' + version;
+    };
+    document.write('<link rel="icon" href="' + __gyAsset('/icons/favicon.svg') + '" type="image/svg+xml">');
+    document.write('<link rel="apple-touch-icon" href="' + __gyAsset('/icons/icon-192.png') + '">');
+    document.write('<link rel="stylesheet" href="' + __gyAsset('/styles/critical.css') + '">');
+    var libraryUrl = __gyAsset('/src/services/library.js');
+    var librarySyncStateUrl = __gyAsset('/src/services/library-sync-state.js');
+    var importScope = location.origin + '/src/';
+    document.write('<script type="importmap">' + JSON.stringify({
+        imports: {
+            '@gy/library': libraryUrl,
+            '@gy/library-sync-state': librarySyncStateUrl,
+        },
+        scopes: (function () {
+            var m = {};
+            m[importScope] = {
+                './services/library.js': libraryUrl,
+                '../services/library.js': libraryUrl,
+                './library.js': libraryUrl,
+                './services/library-sync-state.js': librarySyncStateUrl,
+                '../services/library-sync-state.js': librarySyncStateUrl,
+            };
+            return m;
+        })(),
+    }) + '<\/script>');
+})();
+</script>
+</head>
+<body>
+<app-shell></app-shell>
+<script type="module">import(window.__gyAsset('/src/main.js'));</script>
+</body>
+</html>

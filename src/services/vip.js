@@ -1,15 +1,15 @@
 // VIP 会员服务
 // 对接后端真实接口（Cookie 鉴权，Better Auth）：
-//   GET  /api/me                      → { role, vipExpiresAt }（用户与会员状态）
-//   GET  /api/vip/plans               → [{ id, name, days, price, priceDisplay }]
-//   POST /api/vip/create-order        → { orderNo, qrCode }（支付宝二维码）
-//   GET  /api/vip/order-status?orderNo=→ { status, vipExpiresAt }
+//   GET  /api/v1/me                      → { role, vipExpiresAt }（用户与会员状态）
+//   GET  /api/v1/vip/plans               → [{ id, name, days, price, priceDisplay }]
+//   POST /api/v1/vip/create-order        → { orderNo, qrCode }（支付宝二维码）
+//   GET  /api/v1/vip/order-status?orderNo=→ { status, vipExpiresAt }
 
 import { signal } from '../core/signal.js';
 import { user } from './auth.js';
-import { API_BASE } from './config.js';
+import { API_V1_BASE } from './config.js';
 
-const API = API_BASE;
+const REQUEST_TIMEOUT_MS = 12000;
 
 // VIP 状态：{ isVip, expireAt: Date|null, role }
 export const vipStatus = signal(null);
@@ -18,24 +18,44 @@ export const vipStatus = signal(null);
 //   needAuth=true：带 cookie（用户态接口，如 /me、下单、查单）
 //   needAuth=false：不带 cookie（公开接口，如 /vip/plans）
 //     —— 公开接口不带 credentials，避免后端 ACAO:* 与 credentials 冲突导致 CORS 失败
-async function request(path, { needAuth = false, ...options } = {}) {
+async function request(path, { needAuth = false, timeoutMs = REQUEST_TIMEOUT_MS, ...options } = {}) {
     const init = { ...options };
     if (needAuth) init.credentials = 'include';
     // 仅在有 body 时设 Content-Type，避免无谓的 CORS 预检
     if (options.body) init.headers = { 'Content-Type': 'application/json', ...options.headers };
-    const res = await fetch(`${API}${path}`, init);
-    const text = await res.text();
-    const data = text ? JSON.parse(text) : null;
-    if (!res.ok) {
-        const err = new Error(data?.message || `HTTP ${res.status}`);
-        err.status = res.status;
-        throw err;
+    const controller = typeof AbortController !== 'undefined' && !init.signal ? new AbortController() : null;
+    let timer = null;
+    if (controller) {
+        init.signal = controller.signal;
+        timer = setTimeout(() => controller.abort(), timeoutMs);
     }
-    return data;
+    try {
+        const res = await fetch(`${API_V1_BASE}${path}`, init);
+        const text = await res.text();
+        let data = null;
+        try {
+            data = text ? JSON.parse(text) : null;
+        } catch {
+            data = null;
+        }
+        if (!res.ok) {
+            const err = new Error(data?.message || `HTTP ${res.status}`);
+            err.status = res.status;
+            throw err;
+        }
+        return data;
+    } catch (err) {
+        if (err?.name === 'AbortError') {
+            throw new Error('请求超时，请检查网络后重试');
+        }
+        throw err;
+    } finally {
+        if (timer) clearTimeout(timer);
+    }
 }
 
 /**
- * 检查当前用户 VIP 状态（以 /api/me 为准）
+ * 检查当前用户 VIP 状态（以 /api/v1/me 为准）
  */
 export async function checkVipStatus() {
     if (!user.value) { vipStatus.value = null; return; }

@@ -1,9 +1,17 @@
+# 800 自研 SPA — 生产 Worker，绑定 guangying.org
 name = "800-web"
-compatibility_date = "2026-06-04"
+main = "worker.ts"
+compatibility_date = "2026-06-24"
 
 [assets]
+binding = "ASSETS"
 directory = "."
 not_found_handling = "single-page-application"
+run_worker_first = true
+
+[[services]]
+binding = "API"
+service = "800-api-worker"
 
 [[routes]]
 pattern = "guangying.org"
@@ -13,6 +21,5 @@ custom_domain = true
 pattern = "www.guangying.org"
 custom_domain = true
 
-[[routes]]
-pattern = "m.guangying.org"
-custom_domain = true
+[observability]
+enabled = true
